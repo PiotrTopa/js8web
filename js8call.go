@@ -40,11 +40,18 @@ func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, 
 }
 
 func writeEventsToJs8call(events <-chan Js8callEvent, disconnected chan<- int, writer *bufio.Writer) {
-	fmt.Printf("Writer started")
 	for event := range events {
-		fmt.Printf("Writer object:", event)
+		jsonData, err := json.Marshal(event)
+		if err != nil {
+			logger.Sugar().Errorw("Cannot marshal JSON for event",
+				"event", event,
+				"error", err,
+			)
+			continue
+		}
+		writer.WriteString(string(jsonData) + "\n")
+		fmt.Print("Sending: ", string(jsonData)+"\n")
 	}
-	fmt.Printf("Writer stopped")
 }
 
 func attachEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent, conn net.Conn) {

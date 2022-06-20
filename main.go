@@ -15,11 +15,10 @@ func main() {
 
 	incomingEvents := make(chan Js8callEvent, 1)
 	outgoingEvents := make(chan Js8callEvent, 1)
-
-	initJs8callConnection(incomingEvents, outgoingEvents)
-
 	defer close(incomingEvents)
 	defer close(outgoingEvents)
+
+	initJs8callConnection(incomingEvents, outgoingEvents)
 
 	for event := range incomingEvents {
 		fmt.Print("Processed incoming: ", event)
