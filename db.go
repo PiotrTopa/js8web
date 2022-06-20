@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/PiotrTopa/js8web/model"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -24,6 +25,13 @@ func initDb(db *sql.DB) {
 		)
 	}
 
+	err = model.DefaultAdminUser.Insert(db)
+	if err != nil {
+		logger.Sugar().Fatal(
+			"Could not setup default admin user",
+			"error", err,
+		)
+	}
 	logger.Sugar().Info("Empty database initialized")
 }
 
