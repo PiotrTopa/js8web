@@ -22,7 +22,6 @@ func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, 
 			logger.Sugar().Warnw("Error reading from Js8Call",
 				"error", err,
 			)
-			fmt.Printf("Sendind to disconnected")
 			disconnected <- 1
 			return
 		}
