@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-var (
-	JS8CALL_TCP_CONNECTION_STRING    = "localhost:2442"
-	JS8CALL_TCP_CONNECTION_RETRY_SEC = 5
-	JS8CALL_TCP_CONNECTION_TIMEOUT   = 10
-)
-
 func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, reader *bufio.Reader) {
 	for {
 		var event Js8callEvent

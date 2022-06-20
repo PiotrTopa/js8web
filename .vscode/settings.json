@@ -1,0 +1,12 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "js8web",
+            "database": "${workspaceFolder:js8web}/js8web.db",
+            "group": "js8web"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

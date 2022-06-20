@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"go.uber.org/zap"
 )
 
@@ -17,6 +18,8 @@ func main() {
 	outgoingEvents := make(chan Js8callEvent, 1)
 	defer close(incomingEvents)
 	defer close(outgoingEvents)
+
+	initDbConnection()
 
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
