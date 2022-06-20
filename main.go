@@ -1,6 +1,9 @@
 package main
 
-import "go.uber.org/zap"
+import (
+	"fmt"
+	"go.uber.org/zap"
+)
 
 var (
 	logger *zap.Logger
@@ -18,7 +21,7 @@ func main() {
 	defer close(incomingEvents)
 	defer close(outgoingEvents)
 
-	for {
-
+	for event := range incomingEvents {
+		fmt.Print("Processed incoming: ", event)
 	}
 }
