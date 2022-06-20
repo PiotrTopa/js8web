@@ -15,9 +15,8 @@ var (
 )
 
 func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, reader *bufio.Reader) {
-	var event Js8callEvent
-
 	for {
+		var event Js8callEvent
 		jsonData, err := reader.ReadBytes('\n')
 		if err != nil {
 			logger.Sugar().Warnw("Error reading from Js8Call",
@@ -49,7 +48,7 @@ func writeEventsToJs8call(events <-chan Js8callEvent, disconnected chan<- int, w
 	fmt.Printf("Writer stopped")
 }
 
-func dispatchEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent, conn net.Conn) {
+func attachEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent, conn net.Conn) {
 	disconnected := make(chan int)
 	incomingJs8callEvents := make(chan Js8callEvent, 1)
 	outgoingJs8callEvents := make(chan Js8callEvent, 1)
@@ -76,7 +75,7 @@ func dispatchEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent
 	}
 }
 
-func keepConnectedToJs8callEventStreams(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
+func keepConnectedToJs8call(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
 	for {
 		conn, err := net.Dial("tcp", JS8CALL_TCP_CONNECTION_STRING)
 		if err != nil {
@@ -88,11 +87,11 @@ func keepConnectedToJs8callEventStreams(incomingEvents chan<- Js8callEvent, outg
 			continue
 		}
 		logger.Sugar().Info("Connected to JS8call")
-		dispatchEventsStreamsToJs8callConnection(incomingEvents, outgoingEvents, conn)
+		attachEventsStreamsToJs8callConnection(incomingEvents, outgoingEvents, conn)
 		logger.Sugar().Warn("JS8call disconnected")
 	}
 }
 
-func initJs8callEventStreams(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
-	go keepConnectedToJs8callEventStreams(incomingEvents, outgoingEvents)
+func initJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
+	go keepConnectedToJs8call(incomingEvents, outgoingEvents)
 }

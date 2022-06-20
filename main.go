@@ -16,7 +16,7 @@ func main() {
 	incomingEvents := make(chan Js8callEvent, 1)
 	outgoingEvents := make(chan Js8callEvent, 1)
 
-	initJs8callEventStreams(incomingEvents, outgoingEvents)
+	initJs8callConnection(incomingEvents, outgoingEvents)
 
 	defer close(incomingEvents)
 	defer close(outgoingEvents)
