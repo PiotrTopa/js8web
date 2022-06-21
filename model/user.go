@@ -22,7 +22,7 @@ var DefaultAdminUser = User{
 }
 
 type User struct {
-	Id       int
+	Id       int64
 	Name     string
 	Password string
 	Role     string
@@ -49,9 +49,10 @@ func (obj *User) Insert(db *sql.DB) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(&obj.Name, &obj.Password, &obj.Role, &obj.Bio)
+	res, err := stmt.Exec(&obj.Name, &obj.Password, &obj.Role, &obj.Bio)
 	if err != nil {
 		return err
 	}
+	obj.Id, _ = res.LastInsertId()
 	return nil
 }
