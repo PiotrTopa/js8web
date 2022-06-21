@@ -20,10 +20,24 @@ func main() {
 	defer close(outgoingEvents)
 
 	initDbConnection()
-
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
-	for event := range incomingEvents {
-		fmt.Print("Processed incoming: ", event)
+	parsedIncomingEvents := applyJs8callEventParser(incomingEvents)
+	dbIncomingEvents, webappIncomingEvents := copyChannel(parsedIncomingEvents)
+
+	go func() {
+		for event := range dbIncomingEvents {
+			fmt.Print("Processed DB incoming: ", event)
+		}
+	}()
+
+	go func() {
+		for event := range webappIncomingEvents {
+			fmt.Print("Processed webapp incoming: ", event)
+		}
+	}()
+
+	for {
 	}
+
 }
