@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/PiotrTopa/js8web/model"
 )
 
-func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, reader *bufio.Reader) {
+func readEventsFromJs8call(events chan<- model.Js8callEvent, disconnected chan<- int, reader *bufio.Reader) {
 	for {
-		var event Js8callEvent
+		var event model.Js8callEvent
 		jsonData, err := reader.ReadBytes('\n')
 		if err != nil {
 			logger.Sugar().Warnw("Error reading from Js8Call",
@@ -33,7 +35,7 @@ func readEventsFromJs8call(events chan<- Js8callEvent, disconnected chan<- int, 
 	}
 }
 
-func writeEventsToJs8call(events <-chan Js8callEvent, disconnected chan<- int, writer *bufio.Writer) {
+func writeEventsToJs8call(events <-chan model.Js8callEvent, disconnected chan<- int, writer *bufio.Writer) {
 	for event := range events {
 		jsonData, err := json.Marshal(event)
 		if err != nil {
@@ -48,10 +50,10 @@ func writeEventsToJs8call(events <-chan Js8callEvent, disconnected chan<- int, w
 	}
 }
 
-func attachEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent, conn net.Conn) {
+func attachEventsStreamsToJs8callConnection(incomingEvents chan<- model.Js8callEvent, outgoingEvents <-chan model.Js8callEvent, conn net.Conn) {
 	disconnected := make(chan int)
-	incomingJs8callEvents := make(chan Js8callEvent, 1)
-	outgoingJs8callEvents := make(chan Js8callEvent, 1)
+	incomingJs8callEvents := make(chan model.Js8callEvent, 1)
+	outgoingJs8callEvents := make(chan model.Js8callEvent, 1)
 
 	defer close(incomingJs8callEvents)
 	defer close(outgoingJs8callEvents)
@@ -75,7 +77,7 @@ func attachEventsStreamsToJs8callConnection(incomingEvents chan<- Js8callEvent, 
 	}
 }
 
-func keepConnectedToJs8call(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
+func keepConnectedToJs8call(incomingEvents chan<- model.Js8callEvent, outgoingEvents <-chan model.Js8callEvent) {
 	for {
 		conn, err := net.Dial("tcp", JS8CALL_TCP_CONNECTION_STRING)
 		if err != nil {
@@ -92,6 +94,6 @@ func keepConnectedToJs8call(incomingEvents chan<- Js8callEvent, outgoingEvents <
 	}
 }
 
-func initJs8callConnection(incomingEvents chan<- Js8callEvent, outgoingEvents <-chan Js8callEvent) {
+func initJs8callConnection(incomingEvents chan<- model.Js8callEvent, outgoingEvents <-chan model.Js8callEvent) {
 	go keepConnectedToJs8call(incomingEvents, outgoingEvents)
 }

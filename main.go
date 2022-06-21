@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/PiotrTopa/js8web/model"
 	"go.uber.org/zap"
 )
 
@@ -14,8 +15,8 @@ func main() {
 	logger, _ = zap.NewDevelopment()
 	defer logger.Sync()
 
-	incomingEvents := make(chan Js8callEvent, 1)
-	outgoingEvents := make(chan Js8callEvent, 1)
+	incomingEvents := make(chan model.Js8callEvent, 1)
+	outgoingEvents := make(chan model.Js8callEvent, 1)
 	defer close(incomingEvents)
 	defer close(outgoingEvents)
 

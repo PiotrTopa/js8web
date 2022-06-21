@@ -1,12 +1,16 @@
 package main
 
+import (
+	"github.com/PiotrTopa/js8web/model"
+)
+
 // This file contains all generic modifications to raw events
 // as they are coming from JS8call applied before any other
 // dispatcher takes care
 var num int = 0
 
-func applyJs8callEventParser(in <-chan Js8callEvent) <-chan Js8callEvent {
-	out := make(chan Js8callEvent, 1)
+func applyJs8callEventParser(in <-chan model.Js8callEvent) <-chan model.Js8callEvent {
+	out := make(chan model.Js8callEvent, 1)
 
 	go func() {
 		defer close(out)
@@ -19,7 +23,11 @@ func applyJs8callEventParser(in <-chan Js8callEvent) <-chan Js8callEvent {
 	return out
 }
 
-func testParser(event *Js8callEvent) {
-	num = num + 1
-	event.Test = num
+func testParser(event *model.Js8callEvent) {
+	if event.Type == EVENT_TYPE_RX_ACTIVITY || event.Type == EVENT_TYPE_RX_DIRECTED {
+		event.DataType = "RX"
+		data := model.Rx{}
+		data.Parse(event)
+		event.Data = data
+	}
 }
