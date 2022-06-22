@@ -23,18 +23,17 @@ func main() {
 	initDbConnection()
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
-	parsedIncomingEvents := applyJs8callEventParser(incomingEvents)
-	dbIncomingEvents, webappIncomingEvents := copyChannel(parsedIncomingEvents)
+	stateChangeEvents, newObjects := splitStateChangesAndObjects(incomingEvents)
 
 	go func() {
-		for event := range dbIncomingEvents {
-			fmt.Print("Processed DB incoming: ", event)
+		for event := range newObjects {
+			fmt.Print("OBJECT: ", event, "\n")
 		}
 	}()
 
 	go func() {
-		for event := range webappIncomingEvents {
-			fmt.Print("Processed webapp incoming: ", event)
+		for event := range stateChangeEvents {
+			fmt.Print("STATE CHANGE: ", event, "\n")
 		}
 	}()
 

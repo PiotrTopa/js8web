@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 var (
@@ -14,7 +15,6 @@ var (
 	EVENT_TYPE_RIG_PTT        = "RIG.PTT"
 	EVENT_TYPE_TX_FRAME       = "TX.FRAME"
 
-	SQL_RX_PACKETS_UPDATE = "UPDATE `RX_MESSAGES` SET `TYPE`=?, `CHANNEL`=?, `DIAL`=?, `FREQ`=?, `OFFSET`=?, `SNR`=?, `MODE`=?, `TIME_DRIFT`=?, `GRID`=?, `FROM`=?, `TO`=?, `TEXT`=?, `COMMAND`=?, `EXTRA`=? WHERE `ID`=?"
 	SQL_RX_PACKETS_INSERT = "INSERT INTO `RX_MESSAGES` (`TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
@@ -48,11 +48,12 @@ func speedName(speed int) string {
 	}
 }
 
-func (o *RxPacket) Parse(event *Js8callEvent) error {
+func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
 	if event.Type != EVENT_TYPE_RX_ACTIVITY && event.Type != EVENT_TYPE_RX_DIRECTED && event.Type != EVENT_TYPE_RX_DIRECTED_ME {
-		return errors.New("Wrong event type, cannot parse params")
+		return nil, errors.New("Wrong event type, cannot parse params")
 	}
 
+	o := new(RxPacket)
 	o.Type = event.Type
 	o.Dial = event.Params.Dial
 	o.Channel = uint16(event.Params.Offset / 50)
@@ -68,16 +69,17 @@ func (o *RxPacket) Parse(event *Js8callEvent) error {
 	o.Text = event.Params.Text
 	o.Command = event.Params.Command
 	o.Extra = event.Params.Extra
-	return nil
+
+	return o, nil
 }
 
 func (obj *RxPacket) Insert(db *sql.DB) error {
 	stmt, err := db.Prepare(SQL_RX_PACKETS_INSERT)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error inserting new RxPacket record, caused by %w", err)
 	}
 	defer stmt.Close()
-	//(TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`)
+
 	res, err := stmt.Exec(
 		&obj.Type,
 		&obj.Channel,
@@ -95,9 +97,13 @@ func (obj *RxPacket) Insert(db *sql.DB) error {
 		&obj.Extra,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error inserting new RxPacket record, becouse of %w", err)
 	}
 	obj.Id, _ = res.LastInsertId()
 
 	return nil
+}
+
+func (obj *RxPacket) Save(db *sql.DB) error {
+	return obj.Insert(db)
 }

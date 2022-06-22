@@ -1,6 +1,9 @@
 package model
 
-type db interface {
-	Insert() error
-	Update() error
+import (
+	"database/sql"
+)
+
+type DbObj interface {
+	Save(*sql.DB) error
 }
