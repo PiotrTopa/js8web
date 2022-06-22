@@ -66,9 +66,14 @@ func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
 	o.Grid = event.Params.Grid
 	o.From = event.Params.From
 	o.To = event.Params.To
-	o.Text = event.Params.Text
 	o.Command = event.Params.Command
 	o.Extra = event.Params.Extra
+
+	if event.Params.Text != "" {
+		o.Text = event.Params.Text
+	} else {
+		o.Text = event.Value
+	}
 
 	return o, nil
 }

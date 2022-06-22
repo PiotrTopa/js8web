@@ -23,7 +23,7 @@ func main() {
 	initDbConnection()
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
-	stateChangeEvents, newObjects := splitStateChangesAndObjects(incomingEvents)
+	stateChangeEvents, newObjects := separateStateChangesAndObjects(incomingEvents)
 
 	go func() {
 		for event := range newObjects {

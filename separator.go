@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+
 	"github.com/PiotrTopa/js8web/model"
 )
 
@@ -10,7 +11,7 @@ import (
 // dispatcher takes care
 var num int = 0
 
-func splitStateChangesAndObjects(in <-chan model.Js8callEvent) (<-chan model.Js8callEvent, <-chan model.DbObj) {
+func separateStateChangesAndObjects(in <-chan model.Js8callEvent) (<-chan model.Js8callEvent, <-chan model.DbObj) {
 	outEvents := make(chan model.Js8callEvent, 1)
 	outObjects := make(chan model.DbObj, 1)
 
@@ -34,10 +35,7 @@ func splitStateChangesAndObjects(in <-chan model.Js8callEvent) (<-chan model.Js8
 
 func createDbObject(event *model.Js8callEvent) (model.DbObj, error) {
 	if event.Type == model.EVENT_TYPE_RX_ACTIVITY || event.Type == model.EVENT_TYPE_RX_DIRECTED || event.Type == model.EVENT_TYPE_RX_DIRECTED_ME {
-		packet, err := model.CreateRxPacket(event)
-		if err != nil {
-			return packet, nil
-		}
+		return model.CreateRxPacket(event)
 	}
 	return nil, errors.New("Event is not DB object")
 }

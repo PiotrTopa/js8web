@@ -15,7 +15,7 @@ func readEventsFromJs8call(events chan<- model.Js8callEvent, disconnected chan<-
 		var event model.Js8callEvent
 		jsonData, err := reader.ReadBytes('\n')
 		if err != nil {
-			logger.Sugar().Warnw("Error reading from Js8Call",
+			logger.Sugar().Warnw("Cannot read from Js8Call",
 				"error", err,
 			)
 			disconnected <- 1
@@ -81,7 +81,7 @@ func keepConnectedToJs8call(incomingEvents chan<- model.Js8callEvent, outgoingEv
 	for {
 		conn, err := net.Dial("tcp", JS8CALL_TCP_CONNECTION_STRING)
 		if err != nil {
-			logger.Sugar().Warnw("JS8Call connection error",
+			logger.Sugar().Warnw("Connection to JS8call failed",
 				"address", JS8CALL_TCP_CONNECTION_STRING,
 				"error", err,
 			)
@@ -90,7 +90,7 @@ func keepConnectedToJs8call(incomingEvents chan<- model.Js8callEvent, outgoingEv
 		}
 		logger.Sugar().Info("Connected to JS8call")
 		attachEventsStreamsToJs8callConnection(incomingEvents, outgoingEvents, conn)
-		logger.Sugar().Warn("JS8call disconnected")
+		logger.Sugar().Warn("Disconnected from JS8call")
 	}
 }
 
