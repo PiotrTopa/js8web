@@ -53,9 +53,8 @@ func initDbConnection() *sql.DB {
 			"error", err,
 		)
 	}
-	defer db.Close()
 
-	if recreate == true {
+	if recreate {
 		initDb(db)
 	}
 

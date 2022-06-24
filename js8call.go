@@ -50,7 +50,7 @@ func writeEventsToJs8call(events <-chan model.Js8callEvent, disconnected chan<- 
 	}
 }
 
-func attachEventsStreamsToJs8callConnection(incomingEvents chan<- model.Js8callEvent, outgoingEvents <-chan model.Js8callEvent, conn net.Conn) {
+func attachEventStreamToJs8callConnection(incomingEvents chan<- model.Js8callEvent, outgoingEvents <-chan model.Js8callEvent, conn net.Conn) {
 	disconnected := make(chan int)
 	incomingJs8callEvents := make(chan model.Js8callEvent, 1)
 	outgoingJs8callEvents := make(chan model.Js8callEvent, 1)
@@ -89,7 +89,7 @@ func keepConnectedToJs8call(incomingEvents chan<- model.Js8callEvent, outgoingEv
 			continue
 		}
 		logger.Sugar().Info("Connected to JS8call")
-		attachEventsStreamsToJs8callConnection(incomingEvents, outgoingEvents, conn)
+		attachEventStreamToJs8callConnection(incomingEvents, outgoingEvents, conn)
 		logger.Sugar().Warn("Disconnected from JS8call")
 	}
 }

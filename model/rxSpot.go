@@ -7,18 +7,11 @@ import (
 )
 
 var (
-	MODE_JS8                  = "js8"
-	EVENT_TYPE_RX_ACTIVITY    = "RX.ACTIVITY"
-	EVENT_TYPE_RX_DIRECTED    = "RX.DIRECTED"
-	EVENT_TYPE_RX_DIRECTED_ME = "RX.DIRECTED.ME:"
-	EVENT_TYPE_RX_SPOT        = "RX.SPOT"
-	EVENT_TYPE_RIG_PTT        = "RIG.PTT"
-	EVENT_TYPE_TX_FRAME       = "TX.FRAME"
-
-	SQL_RX_PACKETS_INSERT = "INSERT INTO `RX_MESSAGES` (`TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	EVENT_TYPE_RX_SPOT = "RX.SPOT"
+	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_PACKETS` (`TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
-type RxPacket struct {
+type RxSpot struct {
 	Id        int64
 	Type      string
 	Dial      uint32
@@ -28,7 +21,7 @@ type RxPacket struct {
 	Snr       int16
 	Mode      string
 	Speed     string
-	TimeDrift uint16
+	TimeDrift int16
 	Grid      string
 	From      string
 	To        string
@@ -62,7 +55,7 @@ func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
 	o.Snr = event.Params.Snr
 	o.Mode = MODE_JS8
 	o.Speed = speedName(event.Params.Speed)
-	o.TimeDrift = uint16(1000 * event.Params.TimeDrift)
+	o.TimeDrift = int16(1000 * event.Params.TimeDrift)
 	o.Grid = event.Params.Grid
 	o.From = event.Params.From
 	o.To = event.Params.To
@@ -81,7 +74,7 @@ func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
 func (obj *RxPacket) Insert(db *sql.DB) error {
 	stmt, err := db.Prepare(SQL_RX_PACKETS_INSERT)
 	if err != nil {
-		return fmt.Errorf("Error inserting new RxPacket record, caused by %w", err)
+		return fmt.Errorf("error inserting new RxPacket record, caused by %w", err)
 	}
 	defer stmt.Close()
 
@@ -102,10 +95,10 @@ func (obj *RxPacket) Insert(db *sql.DB) error {
 		&obj.Extra,
 	)
 	if err != nil {
-		return fmt.Errorf("Error inserting new RxPacket record, becouse of %w", err)
+		return fmt.Errorf("error inserting new RxPacket record, becouse of %w", err)
 	}
-	obj.Id, _ = res.LastInsertId()
 
+	obj.Id, _ = res.LastInsertId()
 	return nil
 }
 
