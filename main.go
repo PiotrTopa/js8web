@@ -27,6 +27,7 @@ func main() {
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
 	stateChangeEvents, newObjects := separateStateChangesAndObjects(incomingEvents)
+	stateChangeEvents = fixSameNameForDifferentStationStatusEvents(stateChangeEvents)
 
 	go func() {
 		for object := range newObjects {
@@ -39,7 +40,6 @@ func main() {
 					"error", err,
 				)
 			}
-
 		}
 	}()
 

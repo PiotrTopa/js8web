@@ -7,17 +7,10 @@ import (
 )
 
 var (
-	MODE_JS8                  = "js8"
-	EVENT_TYPE_RX_ACTIVITY    = "RX.ACTIVITY"
-	EVENT_TYPE_RX_DIRECTED    = "RX.DIRECTED"
-	EVENT_TYPE_RX_DIRECTED_ME = "RX.DIRECTED.ME"
-	EVENT_TYPE_RIG_PTT        = "RIG.PTT"
-	EVENT_TYPE_TX_FRAME       = "TX.FRAME"
-
 	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKETS` (`TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
-type RxPacket struct {
+type RxPacketObj struct {
 	Id        int64
 	Type      string
 	Dial      uint32
@@ -43,16 +36,16 @@ func speedName(speed int) string {
 	case 1:
 		return "fast"
 	default:
-		return "normal"
+		return "other"
 	}
 }
 
-func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
+func CreateRxPacketObj(event *Js8callEvent) (*RxPacketObj, error) {
 	if event.Type != EVENT_TYPE_RX_ACTIVITY && event.Type != EVENT_TYPE_RX_DIRECTED && event.Type != EVENT_TYPE_RX_DIRECTED_ME {
-		return nil, errors.New("Wrong event type, cannot parse params")
+		return nil, errors.New("wrong event type, cannot parse params")
 	}
 
-	o := new(RxPacket)
+	o := new(RxPacketObj)
 	o.Type = event.Type
 	o.Dial = event.Params.Dial
 	o.Channel = uint16(event.Params.Offset / 50)
@@ -77,7 +70,7 @@ func CreateRxPacket(event *Js8callEvent) (*RxPacket, error) {
 	return o, nil
 }
 
-func (obj *RxPacket) Insert(db *sql.DB) error {
+func (obj *RxPacketObj) Insert(db *sql.DB) error {
 	stmt, err := db.Prepare(SQL_RX_PACKET_INSERT)
 	if err != nil {
 		return fmt.Errorf("error inserting new RxPacket record, caused by %w", err)
@@ -108,6 +101,6 @@ func (obj *RxPacket) Insert(db *sql.DB) error {
 	return nil
 }
 
-func (obj *RxPacket) Save(db *sql.DB) error {
+func (obj *RxPacketObj) Save(db *sql.DB) error {
 	return obj.Insert(db)
 }
