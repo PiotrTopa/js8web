@@ -27,7 +27,7 @@ func main() {
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
 	stateChangeEvents, newObjects := separateStateChangesAndObjects(incomingEvents)
-	stateChangeEvents = fixSameNameForDifferentStationStatusEvents(stateChangeEvents)
+	outgoingWebsocketEvents := dispatchStateChangeEvents(stateChangeEvents)
 
 	go func() {
 		for object := range newObjects {
@@ -44,7 +44,7 @@ func main() {
 	}()
 
 	go func() {
-		for event := range stateChangeEvents {
+		for event := range outgoingWebsocketEvents {
 			fmt.Print("STATE CHANGE: ", event, "\n")
 		}
 	}()

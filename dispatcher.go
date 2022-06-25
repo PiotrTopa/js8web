@@ -56,6 +56,7 @@ func fixSameNameForDifferentStationStatusEvents(events <-chan model.Js8callEvent
 }
 
 func dispatchStateChangeEvents(events <-chan model.Js8callEvent) <-chan model.WebsocketEvent {
+	events = fixSameNameForDifferentStationStatusEvents(events)
 	websocketEvents := make(chan model.WebsocketEvent, 1)
 	for event := range events {
 		switch event.Type {
