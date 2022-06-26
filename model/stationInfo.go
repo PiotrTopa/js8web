@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SQL_STATION_INFO_INSERT = "INSERT INTO `STATION_INFO` (`TIMESTAMP`, `CURRENT`, `CALL`, `GRID`, `INFO`, `STATUS`) values(?, ?, ?, ?, ?, ?)"
+	SQL_STATION_INFO_INSERT = "INSERT INTO `STATION_INFO` (`TIMESTAMP`, `LATEST`, `CALL`, `GRID`, `INFO`, `STATUS`) values(?, ?, ?, ?, ?, ?)"
 )
 
 type StationInfoWsEvent struct {
@@ -21,7 +21,7 @@ type StationInfoWsEvent struct {
 type StationInfoObj struct {
 	Id        int64
 	Timestamp string
-	Current   bool
+	Latest    bool
 	StationInfoWsEvent
 }
 
@@ -49,27 +49,27 @@ func CreateStationInfoObj(stationInfo StationInfoWsEvent) *StationInfoObj {
 	return &StationInfoObj{
 		StationInfoWsEvent: stationInfo,
 		Timestamp:          toSqlTime(time.Now()),
-		Current:            true,
+		Latest:             true,
 	}
 }
 
 func (obj *StationInfoObj) Insert(db *sql.DB) error {
 	stmt, err := db.Prepare(SQL_STATION_INFO_INSERT)
 	if err != nil {
-		return fmt.Errorf("error inserting new StationInfo record, caused by %w", err)
+		return fmt.Errorf("error preparing SQL inserting new StationInfo record, caused by %w", err)
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(
 		&obj.Timestamp,
-		&obj.Current,
+		&obj.Latest,
 		&obj.Call,
 		&obj.Grid,
 		&obj.Info,
 		&obj.Status,
 	)
 	if err != nil {
-		return fmt.Errorf("error inserting new RxSpot record, becouse of %w", err)
+		return fmt.Errorf("error executing SQL inserting new StationInfo record, becouse of %w", err)
 	}
 
 	obj.Id, _ = res.LastInsertId()

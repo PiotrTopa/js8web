@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKETS` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
 type RxPacketObj struct {
@@ -82,7 +82,7 @@ func CreateRxPacketObj(event *Js8callEvent) (*RxPacketObj, error) {
 func (obj *RxPacketObj) Insert(db *sql.DB) error {
 	stmt, err := db.Prepare(SQL_RX_PACKET_INSERT)
 	if err != nil {
-		return fmt.Errorf("error inserting new RxPacket record, caused by %w", err)
+		return fmt.Errorf("error preparing SQL query fo inserting new RxPacket record, caused by %w", err)
 	}
 	defer stmt.Close()
 
@@ -104,7 +104,7 @@ func (obj *RxPacketObj) Insert(db *sql.DB) error {
 		&obj.Extra,
 	)
 	if err != nil {
-		return fmt.Errorf("error inserting new RxPacket record, becouse of %w", err)
+		return fmt.Errorf("error executing SQL query inserting new RxPacket record, becouse of %w", err)
 	}
 
 	obj.Id, _ = res.LastInsertId()
