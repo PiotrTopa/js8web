@@ -4,21 +4,23 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 var (
-	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_SPOTS` (`ID`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_SPOTS` (`TIMESTAMP`, `ID`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
 type RxSpotObj struct {
-	Id      int64
-	Call    string
-	Grid    string
-	Snr     int16
-	Channel uint16
-	Dial    uint32
-	Freq    uint32
-	Offset  uint16
+	Id        int64
+	Timestamp time.Time
+	Call      string
+	Grid      string
+	Snr       int16
+	Channel   uint16
+	Dial      uint32
+	Freq      uint32
+	Offset    uint16
 }
 
 func CreateRxSpotObj(event *Js8callEvent) (*RxSpotObj, error) {
@@ -27,6 +29,7 @@ func CreateRxSpotObj(event *Js8callEvent) (*RxSpotObj, error) {
 	}
 
 	o := new(RxSpotObj)
+	o.Timestamp = fromJs8Timestamp(event.Params.UTC)
 	o.Call = event.Params.Call
 	o.Grid = event.Params.Grid
 	o.Snr = event.Params.Snr
@@ -46,6 +49,7 @@ func (obj *RxSpotObj) Insert(db *sql.DB) error {
 	defer stmt.Close()
 
 	res, err := stmt.Exec(
+		toSqlTime(obj.Timestamp),
 		&obj.Call,
 		&obj.Grid,
 		&obj.Snr,

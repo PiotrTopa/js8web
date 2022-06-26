@@ -48,7 +48,7 @@ func (o *StationInfoWsEvent) UpdateFromEvent(event *Js8callEvent) error {
 func CreateStationInfoObj(stationInfo StationInfoWsEvent) *StationInfoObj {
 	return &StationInfoObj{
 		StationInfoWsEvent: stationInfo,
-		Timestamp:          time.Now().UTC().Format(time.RFC3339),
+		Timestamp:          toSqlTime(time.Now()),
 		Current:            true,
 	}
 }
@@ -76,6 +76,6 @@ func (obj *StationInfoObj) Insert(db *sql.DB) error {
 	return nil
 }
 
-func (obj *RxSpotObj) Save(db *sql.DB) error {
-	return obj.Insert(db)
+func (obj *StationInfoObj) Save(db *sql.DB) error {
+	return nil
 }

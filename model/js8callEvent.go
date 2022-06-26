@@ -45,7 +45,7 @@ type Js8callEventParams struct {
 	Extra     string      `json:"EXTRA"`
 	PTT       bool        `json:"PTT"`
 	Tones     []uint8     `json:"TONES"`
-	UTC       uint64      `json:"UTC"`
+	UTC       int64       `json:"UTC"`
 	Selected  string      `json:"SELECTED"`
 	Band      string      `json:"BAND"`
 	Mode      string      `json:"MODE"`

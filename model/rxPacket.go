@@ -4,14 +4,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 var (
-	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKETS` (`TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKETS` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
 type RxPacketObj struct {
 	Id        int64
+	Timestamp time.Time
 	Type      string
 	Dial      uint32
 	Channel   uint16
@@ -35,8 +37,14 @@ func speedName(speed int) string {
 		return "normal"
 	case 1:
 		return "fast"
+	case 2:
+		return "turbo"
+	case 4:
+		return "slow"
+	case 8:
+		return "ultra"
 	default:
-		return "other"
+		return "unknown"
 	}
 }
 
@@ -46,6 +54,7 @@ func CreateRxPacketObj(event *Js8callEvent) (*RxPacketObj, error) {
 	}
 
 	o := new(RxPacketObj)
+	o.Timestamp = fromJs8Timestamp(event.Params.UTC)
 	o.Type = event.Type
 	o.Dial = event.Params.Dial
 	o.Channel = uint16(event.Params.Offset / 50)
@@ -78,6 +87,7 @@ func (obj *RxPacketObj) Insert(db *sql.DB) error {
 	defer stmt.Close()
 
 	res, err := stmt.Exec(
+		toSqlTime(obj.Timestamp),
 		&obj.Type,
 		&obj.Channel,
 		&obj.Dial,

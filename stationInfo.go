@@ -4,7 +4,7 @@ import "github.com/PiotrTopa/js8web/model"
 
 var stationInfoCache model.StationInfoWsEvent = model.StationInfoWsEvent{}
 
-func stationInfoNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent) {
+func stationInfoNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent, databaseObjects chan<- model.DbObj) error {
 	newStationInfo := stationInfoCache
 	err := newStationInfo.UpdateFromEvent(event)
 	if err != nil {
@@ -13,19 +13,15 @@ func stationInfoNotifier(event *model.Js8callEvent, websocketEvents chan<- model
 			"event", event,
 			"error", err,
 		)
-		return
+		return nil
 	}
 
 	if newStationInfo != stationInfoCache {
 		stationInfoCache = newStationInfo
 		websocketEvents <- stationInfoCache
-		updateStationInfoInDb(stationInfoCache)
-	}
-}
 
-func updateStationInfoInDb(stationInfo model.StationInfoWsEvent) {
-	go func() {
-		stationInfoObj := model.CreateStationInfoObj(stationInfo)
-		stationInfoObj.Save()
+		stationInfoObj := model.CreateStationInfoObj(stationInfoCache)
+		databaseObjects <- stationInfoObj
 	}
+	return nil
 }

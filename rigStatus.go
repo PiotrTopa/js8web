@@ -4,7 +4,7 @@ import "github.com/PiotrTopa/js8web/model"
 
 var rigStatusCache model.RigStatusWsEvent = model.RigStatusWsEvent{}
 
-func rigStatusNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent) {
+func rigStatusNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent, databaseObjects chan<- model.DbObj) error {
 	newRigStatus, err := model.CreateRigStatusWsEvent(event)
 	if err != nil {
 		logger.Sugar().Errorw(
@@ -12,11 +12,12 @@ func rigStatusNotifier(event *model.Js8callEvent, websocketEvents chan<- model.W
 			"event", event,
 			"error", err,
 		)
-		return
+		return nil
 	}
 
 	if *newRigStatus != rigStatusCache {
 		rigStatusCache = *newRigStatus
 		websocketEvents <- rigStatusCache
 	}
+	return nil
 }

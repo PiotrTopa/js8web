@@ -26,12 +26,11 @@ func main() {
 
 	initJs8callConnection(incomingEvents, outgoingEvents)
 
-	stateChangeEvents, newObjects := separateStateChangesAndObjects(incomingEvents)
-	outgoingWebsocketEvents := dispatchStateChangeEvents(stateChangeEvents)
+	outgoingWebsocketEvents, newObjects := dispatchStateChangeEvents(incomingEvents)
 
 	go func() {
 		for object := range newObjects {
-			fmt.Print("OBJECT: ", object, "\n")
+			fmt.Print("DATABASE: ", object, "\n")
 			err := object.Save(db)
 			if err != nil {
 				logger.Sugar().Errorw(
@@ -45,7 +44,7 @@ func main() {
 
 	go func() {
 		for event := range outgoingWebsocketEvents {
-			fmt.Print("STATE CHANGE: ", event, "\n")
+			fmt.Print("WEBSOCKET: ", event, "\n")
 		}
 	}()
 
