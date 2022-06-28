@@ -37,6 +37,7 @@ func initStationInfoCache(db *sql.DB) {
 			"Can not initialize StationInfo",
 			"error", err,
 		)
+		return
 	}
 	stationInfoCache = stationInfo.StationInfoWsEvent
 }
