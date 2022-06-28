@@ -1,0 +1,37 @@
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			incomingEvents <- model.Js8callEvent{
+				Type: "RX.SPOT",
+				Params: model.Js8callEventParams{
+					Dial:   27245,
+					Freq:   27300,
+					Grid:   "ZX12",
+					Call:   "123ZX00",
+					Snr:    -39,
+					Offset: 55,
+				},
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			incomingEvents <- model.Js8callEvent{
+				Type:  "STATION.INFO",
+				Value: "Test Info 2",
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			incomingEvents <- model.Js8callEvent{
+				Type:  "STATION.INFO",
+				Value: "Test Info 2",
+			}
+		}
+	}()
