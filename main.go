@@ -24,8 +24,9 @@ func main() {
 	db := initDbConnection()
 	defer db.Close()
 
-	initJs8callConnection(incomingEvents, outgoingEvents)
+	initStationInfoCache(db)
 
+	initJs8callConnection(incomingEvents, outgoingEvents)
 	outgoingWebsocketEvents, newObjects := dispatchStateChangeEvents(incomingEvents)
 
 	go func() {

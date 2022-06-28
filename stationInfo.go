@@ -1,6 +1,10 @@
 package main
 
-import "github.com/PiotrTopa/js8web/model"
+import (
+	"database/sql"
+
+	"github.com/PiotrTopa/js8web/model"
+)
 
 var stationInfoCache model.StationInfoWsEvent = model.StationInfoWsEvent{}
 
@@ -24,4 +28,15 @@ func stationInfoNotifier(event *model.Js8callEvent, websocketEvents chan<- model
 		databaseObjects <- stationInfoObj
 	}
 	return nil
+}
+
+func initStationInfoCache(db *sql.DB) {
+	stationInfo, err := model.FetchLatestStationInfo(db)
+	if err != nil {
+		logger.Sugar().Warnw(
+			"Can not initialize StationInfo",
+			"error", err,
+		)
+	}
+	stationInfoCache = stationInfo.StationInfoWsEvent
 }

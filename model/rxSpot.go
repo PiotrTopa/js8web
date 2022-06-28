@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_SPOT` (`TIMESTAMP`, `ID`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_SPOT` (`TIMESTAMP`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
 type RxSpotObj struct {
