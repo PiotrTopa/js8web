@@ -15,6 +15,7 @@ var (
 	EVENT_TYPE_STATION_GRID     = "STATION.GRID"
 
 	// event types as seen in Websocket communication
+	WS_EVENT_TYPE_RIG_PTT      = "RIG.PTT"
 	WS_EVENT_TYPE_RIG_STATUS   = "RIG.STATUS"
 	WS_EVENT_TYPE_STATION_INFO = "STATION.INFO"
 )
@@ -44,7 +45,7 @@ type Js8callEventParams struct {
 	Command   string      `json:"CMD"`
 	Extra     string      `json:"EXTRA"`
 	PTT       bool        `json:"PTT"`
-	Tones     []uint8     `json:"TONES"`
+	Tones     []int       `json:"TONES"`
 	UTC       int64       `json:"UTC"`
 	Selected  string      `json:"SELECTED"`
 	Band      string      `json:"BAND"`

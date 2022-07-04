@@ -35,7 +35,6 @@ func dispatchStateChangeEvents(events <-chan model.Js8callEvent) (<-chan model.W
 		defer close(websocketEvents)
 		defer close(dbObjects)
 
-		//var f func(*model.Js8callEvent, chan<- model.WebsocketEvent, chan<- model.DbObj) error
 		f := defaultNotifier
 		for event := range events {
 			switch event.Type {
@@ -49,6 +48,8 @@ func dispatchStateChangeEvents(events <-chan model.Js8callEvent) (<-chan model.W
 				f = rigStatusNotifier
 			case model.EVENT_TYPE_STATION_CALLSIGN, model.EVENT_TYPE_STATION_GRID, model.EVENT_TYPE_STATION_INFO, model.EVENT_TYPE_STATION_STATUS:
 				f = stationInfoNotifier
+			case model.EVENT_TYPE_RIG_PTT:
+				f = rigPttNotifier
 			default:
 				f = defaultNotifier
 			}

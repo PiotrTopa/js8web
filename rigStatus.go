@@ -1,6 +1,10 @@
 package main
 
-import "github.com/PiotrTopa/js8web/model"
+import (
+	"errors"
+
+	"github.com/PiotrTopa/js8web/model"
+)
 
 var rigStatusCache model.RigStatusWsEvent = model.RigStatusWsEvent{}
 
@@ -19,5 +23,14 @@ func rigStatusNotifier(event *model.Js8callEvent, websocketEvents chan<- model.W
 		rigStatusCache = *newRigStatus
 		websocketEvents <- rigStatusCache
 	}
+	return nil
+}
+
+func rigPttNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent, databaseObjects chan<- model.DbObj) error {
+	wsEvent, err := model.CreateRigPttWsEvent(event)
+	if err != nil {
+		return errors.New("can not convert TxFrame event to db object")
+	}
+	websocketEvents <- wsEvent
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	SQL_TX_FRAME_INSERT = "INSERT INTO `TX_FRAME` (`TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED`, `TONES`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_TX_FRAME_INSERT = "INSERT INTO `TX_FRAME` (`TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED`, `TONES`) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
 type TxFrameObj struct {
@@ -22,7 +22,7 @@ type TxFrameObj struct {
 	Mode      string
 	Speed     string
 	Selected  string
-	Tones     string
+	Tones     []int
 }
 
 func CreateTxFrameObj(event *Js8callEvent) (*TxFrameObj, error) {
@@ -32,6 +32,7 @@ func CreateTxFrameObj(event *Js8callEvent) (*TxFrameObj, error) {
 
 	o := new(TxFrameObj)
 	o.Timestamp = time.Now().UTC()
+	o.Tones = event.Params.Tones
 	return o, nil
 }
 
@@ -55,6 +56,7 @@ func (obj *TxFrameObj) Insert(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("unable to marshall tones %w", err)
 	}
+	fmt.Print("Marshalled: ", string(marshalledTones))
 
 	res, err := stmt.Exec(
 		toSqlTime(obj.Timestamp),
@@ -65,7 +67,7 @@ func (obj *TxFrameObj) Insert(db *sql.DB) error {
 		&obj.Mode,
 		&obj.Speed,
 		&obj.Selected,
-		&marshalledTones,
+		string(marshalledTones),
 	)
 	if err != nil {
 		return fmt.Errorf("error executing SQL query inserting new TxFrame record, becouse of %w", err)

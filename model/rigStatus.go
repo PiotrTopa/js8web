@@ -14,7 +14,7 @@ type RigStatusWsEvent struct {
 }
 
 func (o *RigStatusWsEvent) Type() string {
-	return EVENT_TYPE_RIG_STATUS
+	return WS_EVENT_TYPE_RIG_STATUS
 }
 
 func CreateRigStatusWsEvent(event *Js8callEvent) (*RigStatusWsEvent, error) {
