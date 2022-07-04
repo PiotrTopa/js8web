@@ -43,6 +43,8 @@ func dispatchStateChangeEvents(events <-chan model.Js8callEvent) (<-chan model.W
 				f = rxActivityNotifier
 			case model.EVENT_TYPE_RX_SPOT:
 				f = rxSpotNotifier
+			case model.EVENT_TYPE_TX_FRAME:
+				f = txFrameNotifier
 			case model.EVENT_TYPE_RIG_STATUS:
 				f = rigStatusNotifier
 			case model.EVENT_TYPE_STATION_CALLSIGN, model.EVENT_TYPE_STATION_GRID, model.EVENT_TYPE_STATION_INFO, model.EVENT_TYPE_STATION_STATUS:

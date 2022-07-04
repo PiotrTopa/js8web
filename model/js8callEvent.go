@@ -53,3 +53,24 @@ type Js8callEventParams struct {
 	RptSent   string      `json:"RPT.SENT"`
 	RptRecv   string      `json:"RPT.RECV"`
 }
+
+func calcCahnnelFromOffset(offset uint16) uint16 {
+	return uint16(offset / 50)
+}
+
+func speedName(speed int) string {
+	switch speed {
+	case 0:
+		return "normal"
+	case 1:
+		return "fast"
+	case 2:
+		return "turbo"
+	case 4:
+		return "slow"
+	case 8:
+		return "ultra"
+	default:
+		return "unknown"
+	}
+}

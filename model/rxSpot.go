@@ -34,7 +34,7 @@ func CreateRxSpotObj(event *Js8callEvent) (*RxSpotObj, error) {
 	o.Grid = event.Params.Grid
 	o.Snr = event.Params.Snr
 	o.Dial = event.Params.Dial
-	o.Channel = uint16(event.Params.Offset / 50)
+	o.Channel = calcCahnnelFromOffset(event.Params.Offset)
 	o.Freq = event.Params.Freq
 	o.Offset = event.Params.Offset
 

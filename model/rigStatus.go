@@ -8,7 +8,8 @@ type RigStatusWsEvent struct {
 	Dial     uint32
 	Freq     uint32
 	Offset   uint16
-	Speed    int
+	Channel  uint16
+	Speed    string
 	Selected string
 }
 
@@ -24,7 +25,8 @@ func CreateRigStatusWsEvent(event *Js8callEvent) (*RigStatusWsEvent, error) {
 	o.Dial = event.Params.Dial
 	o.Freq = event.Params.Freq
 	o.Offset = event.Params.Offset
+	o.Channel = calcCahnnelFromOffset(o.Offset)
 	o.Selected = event.Params.Selected
-	o.Speed = event.Params.Speed
+	o.Speed = speedName(event.Params.Speed)
 	return o, nil
 }

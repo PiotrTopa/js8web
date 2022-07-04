@@ -31,23 +31,6 @@ type RxPacketObj struct {
 	Extra     string
 }
 
-func speedName(speed int) string {
-	switch speed {
-	case 0:
-		return "normal"
-	case 1:
-		return "fast"
-	case 2:
-		return "turbo"
-	case 4:
-		return "slow"
-	case 8:
-		return "ultra"
-	default:
-		return "unknown"
-	}
-}
-
 func CreateRxPacketObj(event *Js8callEvent) (*RxPacketObj, error) {
 	if event.Type != EVENT_TYPE_RX_ACTIVITY && event.Type != EVENT_TYPE_RX_DIRECTED && event.Type != EVENT_TYPE_RX_DIRECTED_ME {
 		return nil, errors.New("wrong event type, cannot parse params")
@@ -57,9 +40,9 @@ func CreateRxPacketObj(event *Js8callEvent) (*RxPacketObj, error) {
 	o.Timestamp = fromJs8Timestamp(event.Params.UTC)
 	o.Type = event.Type
 	o.Dial = event.Params.Dial
-	o.Channel = uint16(event.Params.Offset / 50)
 	o.Freq = event.Params.Freq
 	o.Offset = event.Params.Offset
+	o.Channel = calcCahnnelFromOffset(o.Offset)
 	o.Snr = event.Params.Snr
 	o.Mode = MODE_JS8
 	o.Speed = speedName(event.Params.Speed)
