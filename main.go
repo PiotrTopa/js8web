@@ -49,6 +49,8 @@ func main() {
 		}
 	}()
 
+	go startWebappServer()
+
 	for {
 		time.Sleep(time.Second)
 	}
