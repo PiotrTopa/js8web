@@ -56,7 +56,6 @@ func (obj *TxFrameObj) Insert(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("unable to marshall tones %w", err)
 	}
-	fmt.Print("Marshalled: ", string(marshalledTones))
 
 	res, err := stmt.Exec(
 		toSqlTime(obj.Timestamp),

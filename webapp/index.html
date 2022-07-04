@@ -1,20 +1,38 @@
 <script type="importmap">
     {
       "imports": {
-        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+        "axios": "https://cdn.skypack.dev/axios"
       }
     }
   </script>
   
-  <div id="app">{{ message }}</div>
+  <div id="app">{{ message }}<br />{{ posts }}
+  
+    <!-- using $event special variable -->
+    <button @click="fetchData()">
+      Submit
+    </button>
+
+  </div>
   
   <script type="module">
     import { createApp } from 'vue'
-  
+    import axios from 'axios'
+
     createApp({
       data() {
         return {
-          message: 'Hello Vue!'
+          message: 'Hello Vue!',
+          posts: {}
+        }
+      },
+      methods: {
+        fetchData() {
+          alert('test')
+          axios.get('https://jsonplaceholder.typicode.com/posts').then(response => {
+            this.posts = response.data;
+          });
         }
       }
     }).mount('#app')
