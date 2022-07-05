@@ -23,6 +23,12 @@ func startWebappServer() {
 
 	webappFs := http.FileServer(http.FS(serverRoot))
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/station-info", methodHandler(methodRouter{
+		get: apiStationInfoGet,
+	}))
+	mux.HandleFunc("/api/rig-status", methodHandler(methodRouter{
+		get: apiRigStatusGet,
+	}))
 	mux.Handle("/", webappFs)
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", WEBAPP_PORT), mux)

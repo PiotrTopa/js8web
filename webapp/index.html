@@ -7,13 +7,24 @@
     }
   </script>
   
-  <div id="app">{{ message }}<br />{{ posts }}
+  <div id="app">
+    <h3>Rig status</h3>
+    <p>
+      {{ rigStatus }}
+    </p>
   
-    <!-- using $event special variable -->
-    <button @click="fetchData()">
-      Submit
-    </button>
+    <br />
+    
+    <h3>Station info</h3>
+    <p>
+      {{ stationInfo }}
+    </p>
+    
+    <br />
 
+    <button @click="fetchData()">
+      Update
+    </button>
   </div>
   
   <script type="module">
@@ -23,15 +34,17 @@
     createApp({
       data() {
         return {
-          message: 'Hello Vue!',
-          posts: {}
+          stationInfo: {},
+          rigStatus: {}
         }
       },
       methods: {
         fetchData() {
-          alert('test')
-          axios.get('https://jsonplaceholder.typicode.com/posts').then(response => {
-            this.posts = response.data;
+          axios.get('/api/station-info').then(response => {
+            this.stationInfo = response.data;
+          });
+          axios.get('/api/rig-status').then(response => {
+            this.rigStatus = response.data;
           });
         }
       }
