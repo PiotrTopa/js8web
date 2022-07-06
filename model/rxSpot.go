@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	SQL_RX_SPOT_INSERT = "INSERT INTO `RX_SPOT` (`TIMESTAMP`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_SPOT_INSERT    = "INSERT INTO `RX_SPOT` (`TIMESTAMP`, `CALL`, `GRID`, `SNR`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`) values(?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_SPOT_LIST_DAYS = "SELECT date(`TIMESTAMP`) FROM `RX_SPOT` ORDER BY date(`TIMESTAMP`) LIMIT ? OFFSET ?"
 )
 
 type RxSpotObj struct {
@@ -68,4 +69,8 @@ func (obj *RxSpotObj) Insert(db *sql.DB) error {
 
 func (obj *RxSpotObj) Save(db *sql.DB) error {
 	return obj.Insert(db)
+}
+
+func RxSpotListDays(limit int, offset int) {
+
 }
