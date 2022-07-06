@@ -35,7 +35,8 @@
       data() {
         return {
           stationInfo: {},
-          rigStatus: {}
+          rigStatus: {},
+          days: {},
         }
       },
       methods: {
@@ -46,6 +47,9 @@
           axios.get('/api/rig-status').then(response => {
             this.rigStatus = response.data;
           });
+          axios.get('/api/rx-packets/list-days').then(response => {
+            this.days = response.data;
+          })
         }
       }
     }).mount('#app')

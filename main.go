@@ -49,7 +49,7 @@ func main() {
 		}
 	}()
 
-	go startWebappServer()
+	go startWebappServer(db)
 
 	for {
 		time.Sleep(time.Second)

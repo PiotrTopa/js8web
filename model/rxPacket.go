@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 )
 
 var (
-	SQL_RX_PACKET_INSERT = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_INSERT            = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_LIST_BY_TIMESTAMP = "SELECT * FROM `RX_PACKET` WHERE `TIMESTAMP` > ? AND `TIMESTAMP` < ?"
 )
 
 type RxPacketObj struct {
@@ -96,4 +98,64 @@ func (obj *RxPacketObj) Insert(db *sql.DB) error {
 
 func (obj *RxPacketObj) Save(db *sql.DB) error {
 	return obj.Insert(db)
+}
+
+func (obj *RxPacketObj) Scan(rows *sql.Rows) error {
+	var timestamp string
+	err := rows.Scan(
+		&obj.Id,
+		&timestamp,
+		&obj.Type,
+		&obj.Channel,
+		&obj.Dial,
+		&obj.Freq,
+		&obj.Offset,
+		&obj.Snr,
+		&obj.Mode,
+		&obj.TimeDrift,
+		&obj.Grid,
+		&obj.From,
+		&obj.To,
+		&obj.Text,
+		&obj.Command,
+		&obj.Extra,
+	)
+	if err != nil {
+		return err
+	}
+
+	obj.Timestamp, err = fromSqlTime(timestamp)
+	return err
+}
+
+func FetchRxPacketList(from time.Time, to time.Time, db *sql.DB) ([]RxPacketObj, error) {
+	l := make([]RxPacketObj, 0)
+
+	stmt, err := db.Prepare(SQL_RX_PACKET_LIST_BY_TIMESTAMP)
+	if err != nil {
+		return l, fmt.Errorf("error preparing SQL, caused by %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(from, to)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	err = nil
+	for rows.Next() {
+		obj := RxPacketObj{}
+		err = obj.Scan(rows)
+		if err != nil {
+			return l, err
+		}
+		l = append(l, obj)
+	}
+	err = rows.Err()
+	if err != nil {
+		return l, err
+	}
+
+	return l, nil
 }
