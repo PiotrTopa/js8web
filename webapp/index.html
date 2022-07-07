@@ -1,3 +1,4 @@
+<header>
 <script type="importmap">
     {
       "imports": {
@@ -5,52 +6,16 @@
         "axios": "https://cdn.skypack.dev/axios"
       }
     }
-  </script>
-  
+</script>
+</header>
+<body>  
   <div id="app">
-    <h3>Rig status</h3>
-    <p>
-      {{ rigStatus }}
-    </p>
-  
-    <br />
-    
-    <h3>Station info</h3>
-    <p>
-      {{ stationInfo }}
-    </p>
-    
-    <br />
 
-    <button @click="fetchData()">
-      Update
-    </button>
   </div>
   
   <script type="module">
     import { createApp } from 'vue'
-    import axios from 'axios'
-
-    createApp({
-      data() {
-        return {
-          stationInfo: {},
-          rigStatus: {},
-          days: {},
-        }
-      },
-      methods: {
-        fetchData() {
-          axios.get('/api/station-info').then(response => {
-            this.stationInfo = response.data;
-          });
-          axios.get('/api/rig-status').then(response => {
-            this.rigStatus = response.data;
-          });
-          axios.get('/api/rx-packets/list-days').then(response => {
-            this.days = response.data;
-          })
-        }
-      }
-    }).mount('#app')
+    import app from './app.mjs'
+    createApp(app).mount('#app')
   </script>
+</body>

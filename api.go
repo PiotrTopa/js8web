@@ -70,7 +70,7 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		return
 	}
 
-	list, err := model.FetchRxPacketList(from, to, db)
+	list, err := model.FetchRxPacketListByTime(db, from, to)
 	if err != nil {
 		logger.Sugar().Errorw(
 			"Cannot fetch RxPacket records from DB",

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	SQL_RX_PACKET_INSERT            = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	SQL_RX_PACKET_LIST_BY_TIMESTAMP = "SELECT * FROM `RX_PACKET` WHERE `TIMESTAMP` > ? AND `TIMESTAMP` < ?"
+	SQL_RX_PACKET_INSERT            = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_LIST_BY_TIMESTAMP = "SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` > ? AND `TIMESTAMP` < ?"
 )
 
 type RxPacketObj struct {
@@ -80,6 +80,7 @@ func (obj *RxPacketObj) Insert(db *sql.DB) error {
 		&obj.Offset,
 		&obj.Snr,
 		&obj.Mode,
+		&obj.Speed,
 		&obj.TimeDrift,
 		&obj.Grid,
 		&obj.From,
@@ -112,6 +113,7 @@ func (obj *RxPacketObj) Scan(rows *sql.Rows) error {
 		&obj.Offset,
 		&obj.Snr,
 		&obj.Mode,
+		&obj.Speed,
 		&obj.TimeDrift,
 		&obj.Grid,
 		&obj.From,
@@ -128,16 +130,16 @@ func (obj *RxPacketObj) Scan(rows *sql.Rows) error {
 	return err
 }
 
-func FetchRxPacketList(from time.Time, to time.Time, db *sql.DB) ([]RxPacketObj, error) {
+func fetchRxPackets(db *sql.DB, query string, args ...any) ([]RxPacketObj, error) {
 	l := make([]RxPacketObj, 0)
 
-	stmt, err := db.Prepare(SQL_RX_PACKET_LIST_BY_TIMESTAMP)
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		return l, fmt.Errorf("error preparing SQL, caused by %w", err)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(from, to)
+	rows, err := stmt.Query(args...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -158,4 +160,8 @@ func FetchRxPacketList(from time.Time, to time.Time, db *sql.DB) ([]RxPacketObj,
 	}
 
 	return l, nil
+}
+
+func FetchRxPacketListByTime(db *sql.DB, from time.Time, to time.Time) ([]RxPacketObj, error) {
+	return fetchRxPackets(db, SQL_RX_PACKET_LIST_BY_TIMESTAMP, from, to)
 }
