@@ -1,11 +1,15 @@
 import axios from 'axios'
+import Messages from './messages.mjs'
 
 export default {
+    components: {
+        Messages
+    },
     data() {
         return {
             stationInfo: {},
             rigStatus: {},
-            days: {},
+            rxPackets: {},
         }
     },
     methods: {
@@ -16,8 +20,20 @@ export default {
             axios.get('/api/rig-status').then(response => {
                 this.rigStatus = response.data;
             });
-            axios.get('/api/rx-packets/list-days').then(response => {
-                this.days = response.data;
+        },
+
+        fetchRxPackets() {
+            const today = new Date()
+            const yesterday = new Date()
+            yesterday.setDate(today.getDate() - 1)
+
+            axios.get('/api/rx-packets', {
+                params: {
+                    from: yesterday.toISOString(),
+                    to: today.toISOString()
+                }
+            }).then(response => {
+                this.rxPackets = response.data;
             })
         }
     },
@@ -34,10 +50,13 @@ export default {
         {{ stationInfo }}
     </p>
 
-    <br />
+    <Messages :packets=this.rxPackets />
 
     <button @click="fetchData()">
         Update
+    </button>
+    <button @click="fetchRxPackets()">
+        Fetch RxPackets
     </button>`
 }
 
