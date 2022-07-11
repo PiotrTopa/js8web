@@ -43,8 +43,13 @@ func apiRigStatusGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 
 func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 	q := req.URL.Query()
-	if !q.Has("from") || !q.Has("to") {
-		http.Error(w, "no 'from' or 'to' params provided", http.StatusBadRequest)
+	if !q.Has("from") {
+		http.Error(w, "'from' parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	if !q.Has("direction") {
+		http.Error(w, "'direction' parameter is required", http.StatusBadRequest)
 		return
 	}
 
@@ -59,18 +64,12 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		return
 	}
 
-	to, err := parseTimestamp(q.Get("to"))
-	if err != nil {
-		logger.Sugar().Warnw(
-			"Cannot parse timestamp",
-			"time", to,
-			"error", err,
-		)
-		http.Error(w, "cannot parse timestamp in 'to' parameter", http.StatusBadRequest)
-		return
+	direction := q.Get("direction")
+	if direction != "after" && direction != "before" {
+		http.Error(w, "'direction' parameter has to be 'before' or 'after'", http.StatusBadRequest)
 	}
 
-	list, err := model.FetchRxPacketListByTime(db, from, to)
+	list, err := model.FetchRxPacketList(db, from, direction)
 	if err != nil {
 		logger.Sugar().Errorw(
 			"Cannot fetch RxPacket records from DB",

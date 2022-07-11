@@ -1,45 +1,90 @@
+import axios from 'axios'
 import ChatMessage from './chat-message.mjs'
 
 export default {
-    props: ['messages'],
+    props: ['filter'],
     components: {
-        ChatMessage
+        ChatMessage,
+    },
+    created() {
+        this.fetchNewestMessages().then(messages => {
+            this.messages = messages
+            this.$nextTick(_ => {
+                this.$refs.chatHistory.scrollTop = this.$refs.chatHistory.scrollHeight
+            })
+        })
+    },
+    data() {
+        return {
+            messages: [],
+            atTop: false,
+            atBottom: false,
+            loadingBefore: false,
+            loadingAfter: false,
+        }
     },
     methods: {
+        chatScroll(evt) {
+            const el = evt.target
+            const pos = el.scrollTop / el.scrollHeight
+            if (pos < 0.2 && !this.atTop && !this.loadingBefore) {
+                this.loadingBefore = true
+                this.fetchMessagesBefore()
+            }
+        },
+        fetchMessages(from) {
+            return axios.get('/api/rx-packets', {
+                params: {
+                    from: from,
+                    direction: "before"
+                }
+            }).then(response => {
+                return new Promise((resolve, reject) => {
+                    resolve(response.data)
+                })
+            })
+        },
+        fetchNewestMessages() {
+            return this.fetchMessages(new Date(Date.now()).toISOString())
+        },
+        fetchMessagesBefore() {
+            if (this.messages.length < 1) {
+                return
+            }
+            console.log("TEST")
+            const from = this.messages[0].Timestamp
+            this.fetchMessages(from).then(result => {
+                this.messages = this.messages.unshift(...result)
+                this.loadingBefore = false
+                this.atBottom = false
+                if(!result.length) {
+                    this.atTop = true
+                }
+            })
+        },
     },
     template: `
     <div class="chat">
         <div class="chat-header clearfix">
             <div class="row">
-            <div class="col-lg-6">
-                <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
-                <img src="./avatar2.png" alt="avatar">
-                </a>
-                <div class="chat-about">
-                <h6 class="m-b-0">Aiden Chavez</h6>
-                <small>Last seen: 2 hours ago</small>
+                <div class="col-lg-6">
+                    <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                    <img src="./avatar2.png" alt="avatar">
+                    </a>
+                    <div class="chat-about">
+                    <h6 class="m-b-0">Aiden Chavez</h6>
+                    <small>Last seen: 2 hours ago</small>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-6 hidden-sm text-right">
-                <a href="javascript:void(0);" class="btn btn-outline-secondary"><i class="fa fa-camera"></i></a>
-                <a href="javascript:void(0);" class="btn btn-outline-primary"><i class="fa fa-image"></i></a>
-                <a href="javascript:void(0);" class="btn btn-outline-info"><i class="fa fa-cogs"></i></a>
-                <a href="javascript:void(0);" class="btn btn-outline-warning"><i class="fa fa-question"></i></a>
-            </div>
-            </div>
         </div>
-        <div class="chat-history">
+        <div class="loader" v-if="loadingBefore">LOADING</div>
+        <div class="chat-history" @scroll=chatScroll ref="chatHistory">
             <ul class="m-b-0">
-                <li class="clearfix">
-                    <div class="message-data text-right">
-                    <span class="message-data-time">10:10 AM, Today</span>
-                    <img src="./avatar7.png" alt="avatar">
-                    </div>
-                    <div class="message other-message float-right"> Hi Aiden, how are you? How is the project coming along? </div>
-                </li>
                 <ChatMessage v-for="message in messages" :key=message.Id :message=message />
             </ul>
         </div>
+        <div class="loader" v-if="loadingAfter">LOADING</div>
         <div class="chat-message clearfix">
             <div class="input-group mb-0">
             <div class="input-group-prepend">

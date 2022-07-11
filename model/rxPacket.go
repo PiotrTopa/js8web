@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	SQL_RX_PACKET_INSERT            = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	SQL_RX_PACKET_LIST_BY_TIMESTAMP = "SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` > ? AND `TIMESTAMP` < ?"
+	SQL_RX_PACKET_INSERT      = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_RX_PACKET_LIST_AFTER  = "SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` >= ? ORDER BY `ID` ASC LIMIT 100"
+	SQL_RX_PACKET_LIST_BEFORE = "SELECT * FROM (SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` <= ? ORDER BY `ID` DESC LIMIT 100) ORDER BY `ID` ASC"
 )
 
 type RxPacketObj struct {
@@ -162,6 +163,9 @@ func fetchRxPackets(db *sql.DB, query string, args ...any) ([]RxPacketObj, error
 	return l, nil
 }
 
-func FetchRxPacketListByTime(db *sql.DB, from time.Time, to time.Time) ([]RxPacketObj, error) {
-	return fetchRxPackets(db, SQL_RX_PACKET_LIST_BY_TIMESTAMP, from, to)
+func FetchRxPacketList(db *sql.DB, from time.Time, direction string) ([]RxPacketObj, error) {
+	if direction == "before" {
+		return fetchRxPackets(db, SQL_RX_PACKET_LIST_BEFORE, toSqlTime(from))
+	}
+	return fetchRxPackets(db, SQL_RX_PACKET_LIST_AFTER, toSqlTime(from))
 }
