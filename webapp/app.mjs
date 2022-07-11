@@ -1,9 +1,9 @@
 import axios from 'axios'
-import Messages from './messages.mjs'
+import Chat from './chat.mjs'
 
 export default {
     components: {
-        Messages
+        Chat
     },
     data() {
         return {
@@ -50,7 +50,7 @@ export default {
         {{ stationInfo }}
     </p>
 
-    <Messages :packets=this.rxPackets />
+    <Chat :messages=this.rxPackets />
 
     <button @click="fetchData()">
         Update
