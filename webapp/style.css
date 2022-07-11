@@ -41,20 +41,9 @@
 .chat .chat-history .packet .header {
     margin-bottom: 0px;
 }
+
 .chat .chat-history .packet .header .time {
     color: #434651;
-    font-size: 0.5em;
-    clear: both;
-}
-
-.chat .chat-history .packet .header .from {
-    color: #434651;
-    padding-left: 6px;
-}
-
-.chat .chat-history .packet .header .to {
-    color: #434651;
-    padding-left: 6px;
 }
 
 .chat .chat-history .message {
@@ -71,6 +60,19 @@
 }
 
 .chat .chat-history .message .header .time {
+    color: #434651;
+    padding-left: 6px;
+    font-size: 0.8em;
+    clear: both;
+}
+
+.chat .chat-history .message .header .from {
+    clear: left;
+    color: #434651;
+    padding-left: 6px;
+}
+
+.chat .chat-history .message .header .to {
     color: #434651;
     padding-left: 6px
 }
