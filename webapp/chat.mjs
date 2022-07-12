@@ -1,5 +1,6 @@
 import axios from 'axios'
 import ChatMessage from './chat-message.mjs'
+const EXPECTED_MESSAGES_COUNT = 100
 
 export default {
     props: ['filter'],
@@ -30,13 +31,16 @@ export default {
             if (pos < 0.2 && !this.atTop && !this.loadingBefore) {
                 this.loadingBefore = true
                 this.fetchMessagesBefore()
+            } else if (pos > 0.8 && !this.atBottom && !this.loadingAfter) {
+                this.loadingAfter = true
+                this.fetchMessagesAfter()
             }
         },
-        fetchMessages(from) {
+        fetchMessages(from, direction = 'before') {
             return axios.get('/api/rx-packets', {
                 params: {
                     from: from,
-                    direction: "before"
+                    direction: direction
                 }
             }).then(response => {
                 return new Promise((resolve, reject) => {
@@ -51,14 +55,31 @@ export default {
             if (this.messages.length < 1) {
                 return
             }
-            console.log("TEST")
             const from = this.messages[0].Timestamp
-            this.fetchMessages(from).then(result => {
-                this.messages = this.messages.unshift(...result)
+            this.fetchMessages(from, 'before').then(result => {
+                const existingIds = this.messages.map(e => e.Id)
+                const filteredResult = result.filter(e => !existingIds.includes(e.Id))
+                this.messages = filteredResult.concat(this.messages.slice(0, 2 * EXPECTED_MESSAGES_COUNT))              
                 this.loadingBefore = false
                 this.atBottom = false
-                if(!result.length) {
+                if (result.length < EXPECTED_MESSAGES_COUNT) {
                     this.atTop = true
+                }
+            })
+        },
+        fetchMessagesAfter() {
+            if (this.messages.length < 1) {
+                return
+            }
+            const from = this.messages[this.messages.length - 1].Timestamp
+            this.fetchMessages(from, 'after').then(result => {
+                const existingIds = this.messages.map(e => e.Id)
+                const filteredResult = result.filter(e => !existingIds.includes(e.Id))
+                this.messages = this.messages.slice(-2 * EXPECTED_MESSAGES_COUNT).concat(filteredResult)             
+                this.loadingAfter = false
+                this.atTop = false
+                if (result.length < EXPECTED_MESSAGES_COUNT) {
+                    this.atBottom = true
                 }
             })
         },
@@ -78,13 +99,15 @@ export default {
                 </div>
             </div>
         </div>
-        <div class="loader" v-if="loadingBefore">LOADING</div>
         <div class="chat-history" @scroll=chatScroll ref="chatHistory">
+            <div class="history-top" v-if="atTop">(No more messages)</div>
+            <div class="loader" v-if="loadingBefore">LOADING</div>
             <ul class="m-b-0">
                 <ChatMessage v-for="message in messages" :key=message.Id :message=message />
             </ul>
+            <div class="loader" v-if="loadingAfter">LOADING</div>
+            <div class="history-top" v-if="atBottom">(receiving)</div>
         </div>
-        <div class="loader" v-if="loadingAfter">LOADING</div>
         <div class="chat-message clearfix">
             <div class="input-group mb-0">
             <div class="input-group-prepend">

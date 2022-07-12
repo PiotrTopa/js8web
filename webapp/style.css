@@ -59,6 +59,40 @@
     color: #434651;
 }
 
+.chat .chat-history .packet .header .speed {
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    border: 2px solid red;
+    text-align: center;
+    line-height: 1.4em;
+    display: inline-block;
+    font-size: 1em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.chat .chat-history .packet .header .freq {
+    color: #434651;
+}
+
+.chat .chat-history li .header .speed.slow {
+    border-color: #aa0000;
+}
+
+.chat .chat-history li .header .speed.normal {
+    border-color: #aaaa00;
+}
+
+.chat .chat-history li .header .speed.fast {
+    border-color: #00aa00;
+}
+
+.chat .chat-history li .header .speed.turbo {
+    border-color: #0000aa;
+}
+
+
 .chat .chat-history .message {
     clear: both;
 }
@@ -69,8 +103,24 @@
 }
 
 .chat .chat-history .message .header .time {
-    float: left;
-    clear: both;
+    color: #434651;
+    font-size: 0.7em;
+}
+
+.chat .chat-history .message .header .speed {
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    border: 2px solid red;
+    text-align: center;
+    line-height: 1.4em;
+    display: inline-block;
+    font-size: 0.7em;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.chat .chat-history .message .header .freq {
     color: #434651;
     font-size: 0.7em;
 }
@@ -81,11 +131,11 @@
     color: #434651;
 }
 
-.chat .chat-history .message .header .to {
-    float: left;
-    clear: right;
+.chat .chat-history .message .header .grid {
     color: #434651;
-    padding-left: 0.5em;
+    line-height: 2.1em;
+    padding-left: 1em;
+    font-size: 0.7em;
 }
 
 .chat .chat-history .message .content {

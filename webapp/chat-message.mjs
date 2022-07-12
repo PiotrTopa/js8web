@@ -14,5 +14,3 @@ export default {
         <ChatRxMessage v-if="message.Type === 'RX.DIRECTED'" :message=message />
     `
 }
-
-                
