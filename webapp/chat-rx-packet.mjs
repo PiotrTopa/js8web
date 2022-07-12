@@ -9,6 +9,7 @@ export default {
             <div class="header">
                 <span class="time">{{ new Date(message.Timestamp).toLocaleTimeString() }}</span>
                 <span class="speed" :class="message.Speed">{{ message.Speed[0].toUpperCase() }}</span>
+                <span class="snr"><i class="bi bi-activity"></i>{{ message.Snr }}</span>
                 <span class="freq">{{ message.Offset }}Hz</span>
             </div>
             <br />

@@ -22,6 +22,8 @@ export default {
             atBottom: false,
             loadingBefore: false,
             loadingAfter: false,
+            showRawPackets: true,
+            uuid: self.crypto.randomUUID(),
         }
     },
     methods: {
@@ -92,6 +94,11 @@ export default {
                     <div class="chat-about">
                         <h6 class="m-b-0">All messages</h6>
                     </div>
+                    <div class="form-check form-switch settings">
+                        <input class="form-check-input" type="checkbox" role="switch" :id="this.uuid+'-show-raw-packets'" v-model="this.showRawPackets">
+                        <label class="form-check-label" :for="this.uuid+'-show-raw-packets'">Show raw packets</label>
+                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -99,7 +106,7 @@ export default {
             <div class="history-top" v-if="atTop">(No more messages)</div>
             <div class="loader" v-if="loadingBefore">LOADING</div>
             <ul class="m-b-0">
-                <ChatMessage v-for="message in messages" :key=message.Id :message=message />
+                <ChatMessage v-for="message in messages" :key=message.Id :message=message :showRawPackets=showRawPackets />
             </ul>
             <div class="loader" v-if="loadingAfter">LOADING</div>
             <div class="history-top" v-if="atBottom">(receiving)</div>
