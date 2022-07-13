@@ -35,3 +35,8 @@
 			}
 		}
 	}()
+
+
+
+UPDATE RX_PACKET SET `GRID`=trim(`GRID`), `FROM`=trim(`FROM`), `TO`=trim(`TO`), `COMMAND`=trim(`COMMAND`), `EXTRA`=trim(`EXTRA`) WHERE true
+UPDATE RX_PACKET SET `TEXT`=trim(`TEXT`) WHERE true
