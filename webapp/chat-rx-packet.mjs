@@ -1,6 +1,9 @@
+import ChatRxHeaderIcons from './chat-rx-header-icons.mjs'
+
 export default {
     props: ['message'],
     components: {
+        ChatRxHeaderIcons
     },
     methods: {
     },
@@ -8,9 +11,7 @@ export default {
         <li class="clearfix packet">
             <div class="header">
                 <span class="time">{{ new Date(message.Timestamp).toLocaleTimeString() }}</span>
-                <span class="speed" :class="message.Speed">{{ message.Speed[0].toUpperCase() }}</span>
-                <span class="snr"><i class="bi bi-activity"></i>{{ message.Snr }}</span>
-                <span class="freq">{{ message.Offset }}Hz</span>
+                <ChatRxHeaderIcons :message=message />
             </div>
             <br />
             <div class="content">{{ message.Text }}</div>

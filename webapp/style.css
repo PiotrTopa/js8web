@@ -41,6 +41,26 @@
     margin-bottom: 0
 }
 
+.chat .chat-history .packet .header .freq {
+    color: #434651;
+}
+
+.chat .chat-history li .header .speed .slow {
+    color: #770000;
+}
+
+.chat .chat-history li .header .speed .normal {
+    color: #999900;
+}
+
+.chat .chat-history li .header .speed .fast {
+    color: #007700;
+}
+
+.chat .chat-history li .header .speed .turbo {
+    color: #000077;
+}
+
 .chat .chat-history .packet {
     float: left;
     font-size: 0.7em;
@@ -50,78 +70,36 @@
 }
 
 .chat .chat-history .packet .header {
+    color: #434651;
     float: left;
     margin-bottom: 0;
 }
 
 .chat .chat-history .packet .header .time {
-    color: #434651;
+
 }
 
-.chat .chat-history .packet .header .speed {
-    border-radius: 50%;
-    width: 1.5em;
-    height: 1.5em;
-    border: 2px solid red;
-    text-align: center;
-    line-height: 1.4em;
-    display: inline-block;
-    font-size: 1em;
+.chat .chat-history .packet .header .gauges .gauge {
     margin-left: 0.5em;
-    margin-right: 0.5em;
 }
-
-.chat .chat-history .packet .header .freq {
-    color: #434651;
-}
-
-.chat .chat-history li .header .speed.slow {
-    border-color: #aa0000;
-}
-
-.chat .chat-history li .header .speed.normal {
-    border-color: #aaaa00;
-}
-
-.chat .chat-history li .header .speed.fast {
-    border-color: #00aa00;
-}
-
-.chat .chat-history li .header .speed.turbo {
-    border-color: #0000aa;
-}
-
 
 .chat .chat-history .message {
     clear: both;
 }
 
 .chat .chat-history .message .header {
+    color: #434651;
     margin-bottom: 0.6em;
     float: left;
 }
 
 .chat .chat-history .message .header .time {
-    color: #434651;
     font-size: 0.7em;
 }
 
-.chat .chat-history .message .header .speed {
-    border-radius: 50%;
-    width: 1.5em;
-    height: 1.5em;
-    border: 2px solid red;
-    text-align: center;
-    line-height: 1.4em;
-    display: inline-block;
+.chat .chat-history .message .header .gauges .gauge {
     font-size: 0.7em;
     margin-left: 0.5em;
-    margin-right: 0.5em;
-}
-
-.chat .chat-history .message .header .freq {
-    color: #434651;
-    font-size: 0.7em;
 }
 
 .chat .chat-history .message .header .from {
