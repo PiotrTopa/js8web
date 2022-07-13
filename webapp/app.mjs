@@ -22,20 +22,8 @@ export default {
         },
     },
     template: `
-    <h3>Rig status</h3>
-    <p>
-        {{ rigStatus }}
-    </p>
-
-    <br />
-
-    <h3>Station info</h3>
-    <p>
-        {{ stationInfo }}
-    </p>
-
     <div>
-    <Chat />
+        <Chat />
     </div>
 `
 }

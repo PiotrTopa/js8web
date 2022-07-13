@@ -106,6 +106,7 @@
     float: left;
     clear: left;
     color: #434651;
+    font-weight: bold;
 }
 
 .chat .chat-history .message .header .grid {
@@ -113,6 +114,10 @@
     line-height: 2.1em;
     padding-left: 1em;
     font-size: 0.7em;
+}
+
+.chat .chat-history .message .header .grid .bi {
+    margin-right: 0.5em;
 }
 
 .chat .chat-history .message .content {

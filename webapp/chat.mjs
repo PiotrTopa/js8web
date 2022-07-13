@@ -2,6 +2,13 @@ import axios from 'axios'
 import ChatMessage from './chat-message.mjs'
 const EXPECTED_MESSAGES_COUNT = 100
 
+function uidGenerator() {
+    var S4 = function() {
+       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    };
+    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+}
+
 export default {
     props: ['filter'],
     components: {
@@ -23,7 +30,7 @@ export default {
             loadingBefore: false,
             loadingAfter: false,
             showRawPackets: true,
-            uuid: self.crypto.randomUUID(),
+            uid: uidGenerator(),
         }
     },
     methods: {
@@ -95,8 +102,8 @@ export default {
                         <h6 class="m-b-0">All messages</h6>
                     </div>
                     <div class="form-check form-switch settings">
-                        <input class="form-check-input" type="checkbox" role="switch" :id="this.uuid+'-show-raw-packets'" v-model="this.showRawPackets">
-                        <label class="form-check-label" :for="this.uuid+'-show-raw-packets'">Show raw packets</label>
+                        <input class="form-check-input" type="checkbox" role="switch" :id="this.uid+'-show-raw-packets'" v-model="this.showRawPackets">
+                        <label class="form-check-label" :for="this.uid+'-show-raw-packets'">Show raw packets</label>
                     </div>
                     
                 </div>

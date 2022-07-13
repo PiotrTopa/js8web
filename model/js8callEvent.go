@@ -56,7 +56,7 @@ type Js8callEventParams struct {
 }
 
 func calcCahnnelFromOffset(offset uint16) uint16 {
-	return uint16(offset / 50)
+	return uint16((offset - 25) / 50)
 }
 
 func speedName(speed int) string {
