@@ -12,7 +12,7 @@ import (
 var WEBAPP_FS embed.FS
 var WEBAPP_SUBDIR = "webapp"
 
-func startWebappServer(db *sql.DB) {
+func startWebappServer(db *sql.DB, wsSessionContainer *websocketSessionContainer) {
 	serverRoot, err := fs.Sub(WEBAPP_FS, WEBAPP_SUBDIR)
 	if err != nil {
 		logger.Sugar().Fatalf(
@@ -34,6 +34,7 @@ func startWebappServer(db *sql.DB) {
 	mux.HandleFunc("/api/rig-status", methodHandler(methodRouter{
 		get: apiRigStatusGet,
 	}, db))
+	mux.HandleFunc("/ws/updates", websocketHandler(wsSessionContainer))
 	mux.Handle("/", webappFs)
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", WEBAPP_PORT), mux)

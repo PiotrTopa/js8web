@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"time"
 
 	"github.com/PiotrTopa/js8web/model"
@@ -29,9 +29,25 @@ func main() {
 	initJs8callConnection(incomingEvents, outgoingEvents)
 	outgoingWebsocketEvents, newObjects := dispatchStateChangeEvents(incomingEvents)
 
+	websocketMessages := make(chan model.WebsocketMessage, 1)
+	defer close(websocketMessages)
+	go mainDispatcher(db, websocketMessages, outgoingWebsocketEvents, newObjects)
+
+	wsSessionContainer := new(websocketSessionContainer)
+	wsSessionContainer.init()
+	go wsSessionContainer.process(websocketMessages)
+
+	go startWebappServer(db, wsSessionContainer)
+
+	for {
+		time.Sleep(time.Second)
+	}
+
+}
+
+func mainDispatcher(db *sql.DB, websocketMessages chan<- model.WebsocketMessage, outgoingWebsocketEvents <-chan model.WebsocketEvent, newObjects <-chan model.DbObj) {
 	go func() {
 		for object := range newObjects {
-			fmt.Print("DATABASE: ", object, "\n")
 			err := object.Save(db)
 			if err != nil {
 				logger.Sugar().Errorw(
@@ -40,19 +56,20 @@ func main() {
 					"error", err,
 				)
 			}
+
+			websocketMessages <- model.WebsocketMessage{
+				EventType: "object",
+				Event:     object,
+			}
 		}
 	}()
 
 	go func() {
 		for event := range outgoingWebsocketEvents {
-			fmt.Print("WEBSOCKET: ", event, "\n")
+			websocketMessages <- model.WebsocketMessage{
+				EventType: "event",
+				Event:     event,
+			}
 		}
 	}()
-
-	go startWebappServer(db)
-
-	for {
-		time.Sleep(time.Second)
-	}
-
 }
