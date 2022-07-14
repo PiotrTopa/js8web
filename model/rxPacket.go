@@ -35,6 +35,10 @@ type RxPacketObj struct {
 	Extra     string
 }
 
+func (o *RxPacketObj) WsType() string {
+	return WS_OBJ_TYPE_RX_PACKET
+}
+
 func trim(s string) string {
 	return strings.Trim(s, " ")
 }

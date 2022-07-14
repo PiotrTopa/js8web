@@ -24,6 +24,10 @@ type RxSpotObj struct {
 	Offset    uint16
 }
 
+func (o *RxSpotObj) WsType() string {
+	return WS_OBJ_TYPE_RX_SPOT
+}
+
 func CreateRxSpotObj(event *Js8callEvent) (*RxSpotObj, error) {
 	if event.Type != EVENT_TYPE_RX_SPOT {
 		return nil, errors.New("wrong event type, cannot parse params")

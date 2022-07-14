@@ -1,7 +1,10 @@
 import Chat from './chat.mjs'
 
 var ws = new WebSocket("ws://" + location.host + "/ws/updates");
-ws.onmessage = event => console.log("ws-message", event)
+ws.onmessage = message => {
+    var event = JSON.parse(message.data);
+    console.log("ws", event)
+}
 
 export default {
     components: {

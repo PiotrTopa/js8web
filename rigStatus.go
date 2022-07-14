@@ -21,7 +21,7 @@ func rigStatusNotifier(event *model.Js8callEvent, websocketEvents chan<- model.W
 
 	if *newRigStatus != rigStatusCache {
 		rigStatusCache = *newRigStatus
-		websocketEvents <- rigStatusCache
+		websocketEvents <- &rigStatusCache
 	}
 	return nil
 }

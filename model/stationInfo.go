@@ -27,7 +27,7 @@ type StationInfoObj struct {
 	StationInfoWsEvent
 }
 
-func (o *StationInfoWsEvent) Type() string {
+func (o *StationInfoWsEvent) WsType() string {
 	return WS_EVENT_TYPE_STATION_INFO
 }
 

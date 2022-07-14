@@ -8,7 +8,7 @@ type RigPttWsEvent struct {
 	Enabled bool
 }
 
-func (o *RigPttWsEvent) Type() string {
+func (o *RigPttWsEvent) WsType() string {
 	return WS_EVENT_TYPE_RIG_PTT
 }
 

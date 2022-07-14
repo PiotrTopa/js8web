@@ -1,6 +1,7 @@
 package model
 
 type WebsocketMessage struct {
-	EventType string `json:"type"`
+	EventType string
+	WsType    string
 	Event     interface{}
 }

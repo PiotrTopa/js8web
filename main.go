@@ -59,6 +59,7 @@ func mainDispatcher(db *sql.DB, websocketMessages chan<- model.WebsocketMessage,
 
 			websocketMessages <- model.WebsocketMessage{
 				EventType: "object",
+				WsType:    object.WsType(),
 				Event:     object,
 			}
 		}
@@ -68,6 +69,7 @@ func mainDispatcher(db *sql.DB, websocketMessages chan<- model.WebsocketMessage,
 		for event := range outgoingWebsocketEvents {
 			websocketMessages <- model.WebsocketMessage{
 				EventType: "event",
+				WsType:    event.WsType(),
 				Event:     event,
 			}
 		}

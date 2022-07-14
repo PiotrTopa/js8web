@@ -13,7 +13,7 @@ type RigStatusWsEvent struct {
 	Selected string
 }
 
-func (o *RigStatusWsEvent) Type() string {
+func (o *RigStatusWsEvent) WsType() string {
 	return WS_EVENT_TYPE_RIG_STATUS
 }
 

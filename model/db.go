@@ -6,4 +6,5 @@ import (
 
 type DbObj interface {
 	Save(*sql.DB) error
+	WebsocketEvent
 }

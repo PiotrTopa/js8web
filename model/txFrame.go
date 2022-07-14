@@ -25,6 +25,10 @@ type TxFrameObj struct {
 	Tones     []int
 }
 
+func (o *TxFrameObj) WsType() string {
+	return WS_OBJ_TYPE_TX_FRAME
+}
+
 func CreateTxFrameObj(event *Js8callEvent) (*TxFrameObj, error) {
 	if event.Type != EVENT_TYPE_TX_FRAME {
 		return nil, errors.New("wrong event type, cannot parse params")

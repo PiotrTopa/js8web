@@ -22,7 +22,7 @@ func stationInfoNotifier(event *model.Js8callEvent, websocketEvents chan<- model
 
 	if newStationInfo != stationInfoCache {
 		stationInfoCache = newStationInfo
-		websocketEvents <- stationInfoCache
+		websocketEvents <- &stationInfoCache
 
 		stationInfoObj := model.CreateStationInfoObj(stationInfoCache)
 		databaseObjects <- stationInfoObj
