@@ -3,10 +3,10 @@ import ChatMessage from './chat-message.mjs'
 const EXPECTED_MESSAGES_COUNT = 100
 
 function uidGenerator() {
-    var S4 = function() {
-       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    var S4 = function () {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
-    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+    return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
 }
 
 export default {
@@ -21,6 +21,8 @@ export default {
                 this.$refs.chatHistory.scrollTop = this.$refs.chatHistory.scrollHeight
             })
         })
+
+        this.$nextTick(_ => window.addEventListener('event', this.event))
     },
     data() {
         return {
@@ -68,7 +70,7 @@ export default {
             this.fetchMessages(from, 'before').then(result => {
                 const existingIds = this.messages.map(e => e.Id)
                 const filteredResult = result.filter(e => !existingIds.includes(e.Id))
-                this.messages = filteredResult.concat(this.messages.slice(0, 2 * EXPECTED_MESSAGES_COUNT))              
+                this.messages = filteredResult.concat(this.messages.slice(0, 2 * EXPECTED_MESSAGES_COUNT))
                 this.loadingBefore = false
                 this.atBottom = false
                 if (result.length < EXPECTED_MESSAGES_COUNT) {
@@ -84,7 +86,7 @@ export default {
             this.fetchMessages(from, 'after').then(result => {
                 const existingIds = this.messages.map(e => e.Id)
                 const filteredResult = result.filter(e => !existingIds.includes(e.Id))
-                this.messages = this.messages.slice(-2 * EXPECTED_MESSAGES_COUNT).concat(filteredResult)             
+                this.messages = this.messages.slice(-2 * EXPECTED_MESSAGES_COUNT).concat(filteredResult)
                 this.loadingAfter = false
                 this.atTop = false
                 if (result.length < EXPECTED_MESSAGES_COUNT) {
@@ -92,6 +94,9 @@ export default {
                 }
             })
         },
+        event(evt) {
+            console.log("bus", evt)
+        }
     },
     template: `
     <div class="chat">
