@@ -39,11 +39,31 @@ export default {
         closeTab(id) {
             this.chats = this.chats.filter(e => e.id != id)
         },
+        newTab(label, filter) {
+            const id = uidGenerator()
+            this.chats.push({
+                id,
+                label,
+                filter
+            })
+        },
         callsignSelected(callsign) {
-            console.log('callsign-select', callsign)
+            this.newTab(callsign, {
+                Callsign: callsign
+            })
         },
         frequencySelected(frequency) {
-            console.log('frequency-selected', frequency)
+            const from = Math.floor((frequency - 25) / 50) * 50
+            const to = from + 50
+            this.newTab(
+                from + 'Hz',
+                {
+                    Freq: {
+                        From: from,
+                        To: to
+                    }
+                }
+            )
         },
     },
     template: `
