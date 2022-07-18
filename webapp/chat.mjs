@@ -2,23 +2,17 @@ import axios from 'axios'
 import ChatMessage from './chat-message.mjs'
 const EXPECTED_MESSAGES_COUNT = 100
 
-function uidGenerator() {
-    var S4 = function () {
-        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-    };
-    return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-}
-
 export default {
-    props: ['filter'],
+    props: ['filter', 'showRawPackets'],
     components: {
         ChatMessage,
     },
     created() {
         this.fetchNewestMessages().then(messages => {
             this.messages = messages
+            this.atBottom = true;
             this.$nextTick(_ => {
-                this.$refs.chatHistory.scrollTop = this.$refs.chatHistory.scrollHeight
+                this.scrollToBottom()
             })
         })
 
@@ -30,9 +24,7 @@ export default {
             atTop: false,
             atBottom: false,
             loadingBefore: false,
-            loadingAfter: false,
-            showRawPackets: true,
-            uid: uidGenerator(),
+            loadingAfter: false
         }
     },
     methods: {
@@ -47,11 +39,12 @@ export default {
                 this.fetchMessagesAfter()
             }
         },
-        fetchMessages(from, direction = 'before') {
+        fetchMessages(startTime, direction = 'before') {
             return axios.get('/api/rx-packets', {
                 params: {
-                    from: from,
-                    direction: direction
+                    startTime: startTime,
+                    direction: direction,
+                    filter: this.filter,
                 }
             }).then(response => {
                 return new Promise((resolve, reject) => {
@@ -94,26 +87,45 @@ export default {
                 }
             })
         },
+        scrollToBottom() {
+            this.$refs.chatHistory.scrollTop = this.$refs.chatHistory.scrollHeight
+        },
+        filterMessage(message) {
+            var ret = true;
+            if (this.filter) {
+                if (this.filter.Callsign) {
+                    const heap = (message.From + ':' + message.To).toLocaleLowerCase()
+                    const needle = this.filter.Callsign.toLowerCase()
+                    ret &&= heap.includes(needle)
+                }
+
+                if (this.filter.Freq && this.filter.Freq.From && this.filter.Freq.To) {
+                    ret &&= message.Freq >= this.filter.Freq.From
+                    ret &&= message.Freq <= this.filter.Freq.To
+                }
+            }
+            return ret
+        },
+        newMessage(message) {
+            if (!this.filterMessage(message)) {
+                return
+            }
+
+            if (this.atBottom) {
+                this.messages.unshift()
+                this.messages.push(message)
+                this.scrollToBottom()
+            }
+        },
         event(evt) {
-            console.log("bus", evt)
+            const event = evt.detail;
+            if (event.EventType == "object" && event.WsType == "RX.PACKET") {
+                this.newMessage(event.Event)
+            }
         }
     },
     template: `
     <div class="chat">
-        <div class="chat-header clearfix">
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="chat-about">
-                        <h6 class="m-b-0">All messages</h6>
-                    </div>
-                    <div class="form-check form-switch settings">
-                        <input class="form-check-input" type="checkbox" role="switch" :id="this.uid+'-show-raw-packets'" v-model="this.showRawPackets">
-                        <label class="form-check-label" :for="this.uid+'-show-raw-packets'">Show raw packets</label>
-                    </div>
-                    
-                </div>
-            </div>
-        </div>
         <div class="chat-history" @scroll=chatScroll ref="chatHistory">
             <div class="history-top" v-if="atTop">(No more messages)</div>
             <div class="loader" v-if="loadingBefore">LOADING</div>
@@ -121,9 +133,9 @@ export default {
                 <ChatMessage v-for="message in messages" :key=message.Id :message=message :showRawPackets=showRawPackets />
             </ul>
             <div class="loader" v-if="loadingAfter">LOADING</div>
-            <div class="history-top" v-if="atBottom">(receiving)</div>
+            <div class="history-bottom" v-if="atBottom"><i class="bi bi-broadcast"></i> receiving <i class="bi bi-broadcast"></i></div>
         </div>
-        <div class="chat-message clearfix">
+        <div class="chat-message clearfix" style="display: none">
             <div class="input-group mb-0">
             <div class="input-group-prepend">
                 <span class="input-group-text"><i class="fa fa-send"></i></span>

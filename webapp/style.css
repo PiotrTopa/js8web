@@ -1,5 +1,13 @@
+.application {
+    height: 100vh;
+}
+
+.flex-fill {
+    flex:1 1 auto;
+}
+
 .chat {
-    height: 100%;
+    overflow: auto;
     display: flex;
     flex-direction: column;
 }
@@ -26,6 +34,14 @@
     height: 100%;
     padding: 20px;
     border-bottom: 2px solid #fff
+}
+
+.chat .chat-history .history-bottom {
+    float: left;
+    clear: both;
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5em;
 }
 
 .chat .chat-history ul {
@@ -75,9 +91,7 @@
     margin-bottom: 0;
 }
 
-.chat .chat-history .packet .header .time {
-
-}
+.chat .chat-history .packet .header .time {}
 
 .chat .chat-history .packet .header .gauges .gauge {
     margin-left: 0.5em;

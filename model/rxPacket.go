@@ -11,8 +11,8 @@ import (
 
 var (
 	SQL_RX_PACKET_INSERT      = "INSERT INTO `RX_PACKET` (`TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA`) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	SQL_RX_PACKET_LIST_AFTER  = "SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` >= ? ORDER BY `ID` ASC LIMIT 100"
-	SQL_RX_PACKET_LIST_BEFORE = "SELECT * FROM (SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE `TIMESTAMP` <= ? ORDER BY `ID` DESC LIMIT 100) ORDER BY `ID` ASC"
+	SQL_RX_PACKET_LIST_AFTER  = "SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE (?1 = '' OR `FROM` LIKE ?1 OR `TO` LIKE ?1) AND (?2 = 0 OR ?3 = 0 OR (`FREQ` >= ?2 AND `FREQ` <= ?3)) AND `TIMESTAMP` <= ?4 ORDER BY `ID` ASC LIMIT 100"
+	SQL_RX_PACKET_LIST_BEFORE = "SELECT * FROM (SELECT `ID`, `TIMESTAMP`, `TYPE`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `SNR`, `MODE`, `SPEED`, `TIME_DRIFT`, `GRID`, `FROM`, `TO`, `TEXT`, `COMMAND`, `EXTRA` FROM `RX_PACKET` WHERE (?1 = '' OR `FROM` LIKE ?1 OR `TO` LIKE ?1) AND (?2 = 0 OR ?3 = 0 OR (`FREQ` >= ?2 AND `FREQ` <= ?3)) AND `TIMESTAMP` <= ?4 ORDER BY `ID` DESC LIMIT 100) ORDER BY `ID` ASC"
 )
 
 type RxPacketObj struct {
@@ -33,6 +33,15 @@ type RxPacketObj struct {
 	Text      string
 	Command   string
 	Extra     string
+}
+
+type RxPacketFilterFreq struct {
+	From uint32
+	To   uint32
+}
+type RxPacketFilter struct {
+	Callsign string
+	Freq     RxPacketFilterFreq
 }
 
 func (o *RxPacketObj) WsType() string {
@@ -172,9 +181,10 @@ func fetchRxPackets(db *sql.DB, query string, args ...any) ([]RxPacketObj, error
 	return l, nil
 }
 
-func FetchRxPacketList(db *sql.DB, from time.Time, direction string) ([]RxPacketObj, error) {
-	if direction == "before" {
-		return fetchRxPackets(db, SQL_RX_PACKET_LIST_BEFORE, toSqlTime(from))
+func FetchRxPacketList(db *sql.DB, filter *RxPacketFilter, startTime time.Time, direction string) ([]RxPacketObj, error) {
+	sql := SQL_RX_PACKET_LIST_BEFORE
+	if direction == "after" {
+		sql = SQL_RX_PACKET_LIST_AFTER
 	}
-	return fetchRxPackets(db, SQL_RX_PACKET_LIST_AFTER, toSqlTime(from))
+	return fetchRxPackets(db, sql, filter.Callsign, filter.Freq.From, filter.Freq.To, toSqlTime(startTime))
 }

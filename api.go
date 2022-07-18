@@ -43,8 +43,19 @@ func apiRigStatusGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 
 func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 	q := req.URL.Query()
-	if !q.Has("from") {
-		http.Error(w, "'from' parameter is required", http.StatusBadRequest)
+	if !q.Has("startTime") {
+		http.Error(w, "'startTime' parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	startTime, err := parseTimestamp(q.Get("startTime"))
+	if err != nil {
+		logger.Sugar().Warnw(
+			"Cannot parse timestamp",
+			"time", startTime,
+			"error", err,
+		)
+		http.Error(w, "cannot parse timestamp in 'startTime' parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -53,23 +64,22 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		return
 	}
 
-	from, err := parseTimestamp(q.Get("from"))
-	if err != nil {
-		logger.Sugar().Warnw(
-			"Cannot parse timestamp",
-			"time", from,
-			"error", err,
-		)
-		http.Error(w, "cannot parse timestamp in 'from' parameter", http.StatusBadRequest)
-		return
-	}
-
 	direction := q.Get("direction")
 	if direction != "after" && direction != "before" {
 		http.Error(w, "'direction' parameter has to be 'before' or 'after'", http.StatusBadRequest)
+		return
 	}
 
-	list, err := model.FetchRxPacketList(db, from, direction)
+	filter := &model.RxPacketFilter{}
+	if q.Has("filter") {
+		err := json.Unmarshal([]byte(q.Get("filter")), filter)
+		if err != nil {
+			http.Error(w, "unable to parse filter", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	list, err := model.FetchRxPacketList(db, filter, startTime, direction)
 	if err != nil {
 		logger.Sugar().Errorw(
 			"Cannot fetch RxPacket records from DB",

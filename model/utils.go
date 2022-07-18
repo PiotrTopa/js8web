@@ -7,7 +7,7 @@ func fromJs8Timestamp(ms int64) time.Time {
 }
 
 func toSqlTime(t time.Time) string {
-	return t.Format(time.RFC3339)
+	return t.UTC().Format(time.RFC3339)
 }
 
 func fromSqlTime(t string) (time.Time, error) {

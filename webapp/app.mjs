@@ -1,15 +1,14 @@
-import Chat from './chat.mjs'
-import { createApp } from 'vue'
+import ChatWindow from './chat-window.mjs'
 
 export default {
     components: {
-        Chat
+        ChatWindow
     },
     data() {
         return {
             stationInfo: {},
             rigStatus: {},
-            rxPackets: {},
+            rxPackets: {}
         }
     },
     created() {
@@ -34,8 +33,26 @@ export default {
         },
     },
     template: `
-    <div>
-        <Chat />
+    <div class="container-fluid main_container d-flex vh-100">
+        <div class="row flex-fill">
+            <div class="col-12 h-100">
+                <div class="row h-75">
+                    <div class="col-sm-12 col-md-10 d-flex flex-column mh-100">
+                        <ChatWindow />
+                    </div>
+                    <div class="col-md-2">
+                        <!-- Button for information -->
+                        Info
+                    </div>
+                </div>
+                <div class="row h-25">
+                    <div class="col-sm-12">
+                        <!-- Button for information -->
+                        Info
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 `
 }
