@@ -30,7 +30,7 @@ export default {
             uid: uidGenerator(),
             settingsShowRawPackets: true,
         }
-        
+
     },
     methods: {
         activateTab(selected) {
@@ -38,6 +38,12 @@ export default {
         },
         closeTab(id) {
             this.chats = this.chats.filter(e => e.id != id)
+        },
+        callsignSelected(callsign) {
+            console.log('callsign-select', callsign)
+        },
+        frequencySelected(frequency) {
+            console.log('frequency-selected', frequency)
         },
     },
     template: `
@@ -55,7 +61,7 @@ export default {
         </li>
     </ul>
     <template v-for="chat in chats">
-        <Chat v-show="activeTab == chat.id" :filter="chat.filter" :showRawPackets="this.settingsShowRawPackets" />
+        <Chat v-show="activeTab == chat.id" :filter="chat.filter" :showRawPackets="this.settingsShowRawPackets" @callsignSelected="this.callsignSelected" @frequencySelected="this.frequencySelected" />
     </template>
     <div v-show="activeTab == 'settings'">
         <div class="row">

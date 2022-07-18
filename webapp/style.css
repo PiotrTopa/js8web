@@ -97,6 +97,16 @@
     margin-left: 0.5em;
 }
 
+.chat .chat-history .packet .header .gauges .gauge .btn {
+    font-size: 1em!important;
+    color: #434651;
+}
+
+.chat .chat-history .message .header .gauges .gauge .btn {
+    font-size: 1em!important;
+    color: #434651;
+}
+
 .chat .chat-history .message {
     clear: both;
 }

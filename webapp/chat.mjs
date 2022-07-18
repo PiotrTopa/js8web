@@ -4,11 +4,12 @@ const EXPECTED_MESSAGES_COUNT = 100
 
 export default {
     props: ['filter', 'showRawPackets'],
+    emits: ['callsignSelected', 'frequencySelected'],
     components: {
         ChatMessage,
     },
     created() {
-        this.fetchNewestMessages().then(messages => {
+        this.fetchNewestMessages().then(messages => {   
             this.messages = messages
             this.atBottom = true;
             this.$nextTick(_ => {
@@ -130,7 +131,7 @@ export default {
             <div class="history-top" v-if="atTop">(No more messages)</div>
             <div class="loader" v-if="loadingBefore">LOADING</div>
             <ul class="m-b-0">
-                <ChatMessage v-for="message in messages" :key=message.Id :message=message :showRawPackets=showRawPackets />
+                <ChatMessage v-for="message in messages" :key=message.Id :message=message :showRawPackets=showRawPackets @callsignSelected="e => $emit('callsignSelected', e)" @frequencySelected="e => $emit('frequencySelected', e)" />
             </ul>
             <div class="loader" v-if="loadingAfter">LOADING</div>
             <div class="history-bottom" v-if="atBottom"><i class="bi bi-broadcast"></i> receiving <i class="bi bi-broadcast"></i></div>
