@@ -114,6 +114,68 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 	w.Write(response)
 }
 
+func apiChatMessagesGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
+	q := req.URL.Query()
+	if !q.Has("startTime") {
+		http.Error(w, "'startTime' parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	startTime, err := parseTimestamp(q.Get("startTime"))
+	if err != nil {
+		logger.Sugar().Warnw(
+			"Cannot parse timestamp",
+			"time", q.Get("startTime"),
+			"error", err,
+		)
+		http.Error(w, "cannot parse timestamp in 'startTime' parameter", http.StatusBadRequest)
+		return
+	}
+
+	if !q.Has("direction") {
+		http.Error(w, "'direction' parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	direction := q.Get("direction")
+	if direction != "after" && direction != "before" {
+		http.Error(w, "'direction' parameter has to be 'before' or 'after'", http.StatusBadRequest)
+		return
+	}
+
+	filter := &model.RxPacketFilter{}
+	if q.Has("filter") {
+		err := json.Unmarshal([]byte(q.Get("filter")), filter)
+		if err != nil {
+			http.Error(w, "unable to parse filter", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	list, err := model.FetchChatMessages(db, filter, startTime, direction, 100)
+	if err != nil {
+		logger.Sugar().Errorw(
+			"Cannot fetch chat messages from DB",
+			"error", err,
+		)
+		http.Error(w, "cannot fetch chat messages", http.StatusInternalServerError)
+		return
+	}
+
+	response, err := json.Marshal(list)
+	if err != nil {
+		logger.Sugar().Errorw(
+			"Cannot marshal chat messages json",
+			"error", err,
+		)
+		http.Error(w, "cannot marshal chat messages", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+}
+
 // apiTxMessagePost returns a handler that sends a text message to JS8Call via the outgoing events channel.
 func apiTxMessagePost(outgoingEvents chan<- model.Js8callEvent) func(http.ResponseWriter, *http.Request, *sql.DB) {
 	return func(w http.ResponseWriter, req *http.Request, db *sql.DB) {

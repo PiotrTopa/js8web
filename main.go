@@ -5,21 +5,38 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/PiotrTopa/js8web/model"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
 	logger *zap.Logger
 )
 
-func main() {
-	logger, _ = zap.NewDevelopment()
-	defer logger.Sync()
+func parseLogLevel(level string) zapcore.Level {
+	switch strings.ToLower(level) {
+	case "debug":
+		return zapcore.DebugLevel
+	case "warn":
+		return zapcore.WarnLevel
+	case "error":
+		return zapcore.ErrorLevel
+	default:
+		return zapcore.InfoLevel
+	}
+}
 
+func main() {
 	initConfig()
+
+	cfg := zap.NewDevelopmentConfig()
+	cfg.Level.SetLevel(parseLogLevel(LOG_LEVEL))
+	logger, _ = cfg.Build()
+	defer logger.Sync()
 
 	logger.Sugar().Infow("js8web starting",
 		"js8callAddr", JS8CALL_TCP_CONNECTION_STRING,

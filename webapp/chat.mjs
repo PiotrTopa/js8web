@@ -46,7 +46,7 @@ export default {
             }
         },
         fetchMessages(startTime, direction = 'before') {
-            return axios.get('/api/rx-packets', {
+            return axios.get('/api/chat-messages', {
                 params: {
                     startTime: startTime,
                     direction: direction,
@@ -96,9 +96,14 @@ export default {
             var ret = true;
             if (this.filter) {
                 if (this.filter.Callsign) {
-                    const heap = (message.From + ':' + message.To).toLocaleLowerCase()
                     const needle = this.filter.Callsign.toLowerCase()
-                    ret &&= heap.includes(needle)
+                    if (message.Type === 'TX.FRAME') {
+                        const selected = (message.Selected || '').toLowerCase()
+                        ret &&= selected.includes(needle)
+                    } else {
+                        const heap = ((message.From || '') + ':' + (message.To || '')).toLocaleLowerCase()
+                        ret &&= heap.includes(needle)
+                    }
                 }
 
                 if (this.filter.Freq && this.filter.Freq.From && this.filter.Freq.To) {
@@ -121,7 +126,12 @@ export default {
         event(evt) {
             const event = evt.detail;
             if (event.EventType == "object" && (event.WsType == "RX.PACKET" || event.WsType == "TX.FRAME")) {
-                this.newMessage(event.Event)
+                const message = { ...event.Event }
+                // Ensure TX.FRAME events have a Type field for chat-message routing
+                if (event.WsType == "TX.FRAME" && !message.Type) {
+                    message.Type = "TX.FRAME"
+                }
+                this.newMessage(message)
             }
         },
         sendMessage() {
@@ -161,7 +171,7 @@ export default {
             <div class="loader" v-if="loadingAfter">LOADING</div>
             <div class="history-bottom" v-if="atBottom"><i class="bi bi-broadcast"></i> receiving <i class="bi bi-broadcast"></i></div>
         </div>
-        <div class="chat-input" v-if="$root.authenticated">
+        <div class="chat-input" v-if="$root.authenticated && ($root.authUser?.role === 'admin' || $root.authUser?.role === 'operator')">
             <div class="input-group">
                 <input type="text" class="form-control" placeholder="Type message to send via JS8Call..." v-model="txText" @keydown="handleTxKeydown" ref="txInput" :disabled="txSending">
                 <button class="btn btn-primary" @click="sendMessage" :disabled="!txText.trim() || txSending">

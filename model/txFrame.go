@@ -9,7 +9,9 @@ import (
 )
 
 var (
-	SQL_TX_FRAME_INSERT = "INSERT INTO `TX_FRAME` (`TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED`, `TONES`) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_TX_FRAME_INSERT      = "INSERT INTO `TX_FRAME` (`TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED`, `TONES`) values(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	SQL_TX_FRAME_LIST_AFTER  = "SELECT `ID`, `TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED` FROM `TX_FRAME` WHERE `TIMESTAMP` > ?1 ORDER BY `ID` ASC LIMIT 100"
+	SQL_TX_FRAME_LIST_BEFORE = "SELECT * FROM (SELECT `ID`, `TIMESTAMP`, `CHANNEL`, `DIAL`, `FREQ`, `OFFSET`, `MODE`, `SPEED`, `SELECTED` FROM `TX_FRAME` WHERE `TIMESTAMP` <= ?1 ORDER BY `ID` DESC LIMIT 100) ORDER BY `ID` ASC"
 )
 
 type TxFrameObj struct {
@@ -82,4 +84,61 @@ func (obj *TxFrameObj) Insert(db *sql.DB) error {
 
 func (obj *TxFrameObj) Save(db *sql.DB) error {
 	return obj.Insert(db)
+}
+
+func (obj *TxFrameObj) Scan(rows *sql.Rows) error {
+	var timestamp string
+	err := rows.Scan(
+		&obj.Id,
+		&timestamp,
+		&obj.Channel,
+		&obj.Dial,
+		&obj.Freq,
+		&obj.Offset,
+		&obj.Mode,
+		&obj.Speed,
+		&obj.Selected,
+	)
+	if err != nil {
+		return err
+	}
+	obj.Timestamp, err = fromSqlTime(timestamp)
+	return err
+}
+
+func fetchTxFrames(db *sql.DB, query string, args ...any) ([]TxFrameObj, error) {
+	l := make([]TxFrameObj, 0)
+
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return l, fmt.Errorf("error preparing SQL, caused by %w", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return l, fmt.Errorf("error executing SQL query, caused by %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		obj := TxFrameObj{}
+		err = obj.Scan(rows)
+		if err != nil {
+			return l, err
+		}
+		l = append(l, obj)
+	}
+	if err = rows.Err(); err != nil {
+		return l, err
+	}
+	return l, nil
+}
+
+func FetchTxFrameList(db *sql.DB, startTime time.Time, direction string) ([]TxFrameObj, error) {
+	query := SQL_TX_FRAME_LIST_BEFORE
+	if direction == "after" {
+		query = SQL_TX_FRAME_LIST_AFTER
+	}
+	return fetchTxFrames(db, query, toSqlTime(startTime))
 }

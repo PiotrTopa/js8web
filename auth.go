@@ -72,7 +72,32 @@ func authRequired(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, ok := getSessionFromRequest(r)
 		if !ok {
+			w.Header().Set("Content-Type", "application/json")
 			http.Error(w, `{"error":"authentication required"}`, http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
+
+// roleRequired wraps an http.HandlerFunc and rejects requests from users
+// whose role is not in the allowed list. Must be used after authRequired.
+func roleRequired(roles []string, next http.HandlerFunc) http.HandlerFunc {
+	allowed := make(map[string]bool, len(roles))
+	for _, r := range roles {
+		allowed[r] = true
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		s, ok := getSessionFromRequest(r)
+		if !ok {
+			w.Header().Set("Content-Type", "application/json")
+			http.Error(w, `{"error":"authentication required"}`, http.StatusUnauthorized)
+			return
+		}
+		if !allowed[s.role] {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(authResponse{Ok: false, Error: "insufficient permissions"})
 			return
 		}
 		next(w, r)

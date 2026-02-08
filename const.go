@@ -13,6 +13,7 @@ var (
 	JS8CALL_TCP_CONNECTION_RETRY_SEC int
 	DB_FILE_PATH                     string
 	WEBAPP_PORT                      int
+	LOG_LEVEL                        string
 )
 
 //resource files
@@ -41,6 +42,7 @@ func initConfig() {
 	flag.IntVar(&JS8CALL_TCP_CONNECTION_RETRY_SEC, "reconnect-interval", envOrDefaultInt("JS8WEB_RECONNECT_SEC", 5), "Seconds between JS8Call reconnection attempts")
 	flag.StringVar(&DB_FILE_PATH, "db", envOrDefault("JS8WEB_DB_PATH", "./js8web.db"), "Path to SQLite database file")
 	flag.IntVar(&WEBAPP_PORT, "port", envOrDefaultInt("JS8WEB_PORT", 8080), "HTTP server port")
+	flag.StringVar(&LOG_LEVEL, "log-level", envOrDefault("JS8WEB_LOG_LEVEL", "info"), "Log level: debug, info, warn, error")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "js8web — Web monitor and control interface for JS8Call\n\n")
@@ -51,6 +53,7 @@ func initConfig() {
 		fmt.Fprintf(os.Stderr, "  JS8WEB_RECONNECT_SEC  Reconnect interval in seconds (default: 5)\n")
 		fmt.Fprintf(os.Stderr, "  JS8WEB_DB_PATH        SQLite database file path (default: ./js8web.db)\n")
 		fmt.Fprintf(os.Stderr, "  JS8WEB_PORT           HTTP server port (default: 8080)\n")
+		fmt.Fprintf(os.Stderr, "  JS8WEB_LOG_LEVEL      Log level: debug, info, warn, error (default: info)\n")
 	}
 
 	flag.Parse()

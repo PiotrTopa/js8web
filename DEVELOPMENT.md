@@ -73,7 +73,7 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | File | Responsibility |
 |------|---------------|
 | `main.go` | Entry point. Initializes logger, config, DB, channels, JS8Call connection, dispatcher, WebSocket session container, and HTTP server. Handles graceful shutdown via OS signals (SIGINT/SIGTERM). |
-| `const.go` | Configuration: CLI flags, environment variable parsing, defaults. Embeds `res/initDb.sql` via `//go:embed`. |
+| `const.go` | Configuration: CLI flags, environment variable parsing, defaults. Embeds `res/initDb.sql` via `//go:embed`. Supports `-log-level` flag for configurable logging. |
 | `js8call.go` | Manages the persistent TCP connection to JS8Call. Auto-reconnects on failure. Reads newline-delimited JSON events from JS8Call and writes outgoing events. |
 | `dispatcher.go` | Central event router. Applies a fix for the ambiguous `STATION.STATUS` event. Dispatches each event type to its specific notifier function, producing `WebsocketEvent` or `DbObj` items. |
 | `rxActivity.go` | Notifier for `RX.ACTIVITY`, `RX.DIRECTED`, `RX.DIRECTED.ME` events → creates `RxPacketObj` for DB. Also handles `RX.SPOT` → creates `RxSpotObj`. |
@@ -82,8 +82,9 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | `txActivity.go` | Notifier for `TX.FRAME` → creates `TxFrameObj`, applies current rig status, saves to DB. |
 | `db.go` | SQLite database initialization. Creates file and runs `initDb.sql` if DB does not exist. Creates default admin user. |
 | `webappServer.go` | HTTP server setup. Registers REST API routes (including auth and TX message endpoints), WebSocket endpoint, and static file handler for the embedded webapp. Implements method routing and auth middleware integration. |
-| `api.go` | REST API handler functions: `GET /api/station-info`, `GET /api/rig-status`, `GET /api/rx-packets`, `POST /api/tx-message` (sends message to JS8Call). |
-| `auth.go` | Authentication system: cookie-based session management, login/logout/check API handlers, `authRequired` middleware. Sessions are stored in-memory with 24-hour expiry. |
+| `api.go` | REST API handler functions: `GET /api/station-info`, `GET /api/rig-status`, `GET /api/rx-packets`, `GET /api/chat-messages` (combined RX+TX history), `POST /api/tx-message` (sends message to JS8Call). |
+| `auth.go` | Authentication system: cookie-based session management, login/logout/check API handlers, `authRequired` and `roleRequired` middleware. Sessions are stored in-memory with 24-hour expiry. |
+| `userApi.go` | User management API: list, create, update, delete users, change passwords. Admin-only endpoints. |
 | `websocket.go` | WebSocket upgrade handler and session management. Each connected browser gets a session; all sessions receive broadcast messages. |
 
 ### Model Package (`model/`)
@@ -96,12 +97,13 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | `websocketMessage.go` | Defines `WebsocketMessage` struct sent over WebSocket to browsers. |
 | `rxPacket.go` | `RxPacketObj` — model for received packets. Insert, Scan, query logic. Supports filtered listing with pagination by timestamp (before/after). |
 | `rxSpot.go` | `RxSpotObj` — model for RX spot reports. Insert logic. Stub for listing by days. |
-| `txFrame.go` | `TxFrameObj` — model for transmitted frames. Stores tone data as JSON. Applies rig status before saving. |
+| `txFrame.go` | `TxFrameObj` — model for transmitted frames. Stores tone data as JSON. Applies rig status before saving. Supports filtered listing with pagination by timestamp. |
 | `rigStatus.go` | `RigStatusWsEvent` — in-memory rig status (dial freq, offset, speed, selected callsign). Not persisted. |
 | `rigPtt.go` | `RigPttWsEvent` — PTT on/off event for WebSocket broadcast. |
 | `stationInfo.go` | `StationInfoObj` / `StationInfoWsEvent` — station callsign, grid, info, status. Persisted with a "latest" flag pattern. |
-| `user.go` | `User` model with SHA-256 password hashing. Default admin/admin user. Roles: admin, monitor, operator. `FetchUserByName` for login lookup. |
+| `user.go` | `User` model with SHA-256 password hashing. Default admin/admin user. Roles: admin, monitor, operator. `FetchUserByName` and `FetchUserById` for lookups. `FetchAllUsers`, `UpdateUser`, `UpdateUserPassword`, `DeleteUser` for management. `UserPublic` for safe serialization. |
 | `utils.go` | Time conversion helpers: JS8Call millisecond timestamps ↔ `time.Time` ↔ SQLite RFC3339 strings. |
+| `chatMessage.go` | `ChatMessage` — unified wrapper for RX packets and TX frames. `FetchChatMessages` merges both types, sorted by timestamp, for the chat API. |
 
 ### Database Schema (`res/initDb.sql`)
 
@@ -124,14 +126,15 @@ All timestamp-bearing tables have indexes on `TIMESTAMP`.
 | `login-page.mjs` | Login form component. Submits credentials to `POST /api/auth/login`. Emits `login` event on success with username and role. |
 | `toast-container.mjs` | Toast notification system. Displays success/error/warning/info messages with auto-dismiss (3s for success, 6s for errors). |
 | `status-bar.mjs` | Status bar component showing connection state (wi-fi icon), station callsign, grid, dial frequency, offset, speed mode, selected callsign, station info, logged-in user, and logout button. |
-| `chat-window.mjs` | Tab management component. Default "All messages" tab + dynamic filter tabs (by callsign or frequency). Settings tab with "show raw packets" toggle. |
-| `chat.mjs` | Core chat/message list component. Infinite scroll (loads older/newer pages). Listens for `RX.PACKET` and `TX.FRAME` WebSocket events and appends new messages in real-time. Applies client-side filtering. Includes message input field for sending messages to JS8Call (visible when authenticated). |
+| `chat-window.mjs` | Tab management component. Default "All messages" tab + dynamic filter tabs (by callsign or frequency). Settings tab with "show raw packets" toggle. Admin tab with user management (admin role only). |
+| `chat.mjs` | Core chat/message list component. Infinite scroll (loads older/newer pages). Listens for `RX.PACKET` and `TX.FRAME` WebSocket events and appends new messages in real-time. Uses `/api/chat-messages` for combined RX+TX history. Applies client-side filtering. Includes message input field for sending messages to JS8Call (visible to operator and admin roles). |
 | `chat-message.mjs` | Router component: renders `ChatRxPacket` for raw `RX.ACTIVITY`, `ChatRxMessage` for `RX.DIRECTED`/`RX.DIRECTED.ME` messages, and `ChatTxFrame` for transmitted frames. |
 | `chat-rx-message.mjs` | Renders a directed message with sender callsign, recipient, grid, timestamp, SNR/speed/drift gauges, and message text. Messages directed to own station are visually highlighted. |
 | `chat-rx-packet.mjs` | Renders a raw activity packet with timestamp and gauges. |
 | `chat-tx-frame.mjs` | Renders a transmitted frame indicator with timestamp, frequency, speed, and selected callsign. |
 | `chat-rx-header-icons.mjs` | Reusable gauge icons: frequency (clickable to filter), SNR (color-coded blue→yellow→red), speed indicator, time drift. |
-| `style.css` | Chat-style layout. Flex-based full-height UI. Message bubbles, gauge styling, speed-color classes. |
+| `admin-users.mjs` | Admin panel for user management. List all users, create new users, change roles, reset passwords, delete users. Only accessible to admin role. |
+| `style.css` | Chat-style layout. Flex-based full-height UI. Message bubbles, gauge styling, speed-color classes. Mobile-responsive media queries. |
 
 ---
 
@@ -165,10 +168,17 @@ All timestamp-bearing tables have indexes on `TIMESTAMP`.
 | `GET /api/station-info` | GET | Returns current station info (callsign, grid, info, status) from in-memory cache. |
 | `GET /api/rig-status` | GET | Returns current rig status (dial, freq, offset, channel, speed, selected) from in-memory cache. |
 | `GET /api/rx-packets` | GET | Returns up to 100 RX packets. Params: `startTime` (RFC3339), `direction` (`before`/`after`), optional `filter` (JSON with `Callsign` and/or `Freq.From`/`Freq.To`). |
-| `POST /api/tx-message` | POST | Sends a text message to JS8Call. Requires authentication. Body: `{"text": "..."}`. |
+| `GET /api/chat-messages` | GET | Returns up to 100 combined RX packets and TX frames, sorted by timestamp. Same params as `/api/rx-packets`. |
+| `POST /api/tx-message` | POST | Sends a text message to JS8Call. Requires operator or admin role. Body: `{"text": "..."}`. |
 | `POST /api/auth/login` | POST | Authenticates user. Body: `{"username": "...", "password": "..."}`. Returns session cookie. |
 | `POST /api/auth/logout` | POST | Clears session cookie and invalidates server-side session. |
 | `GET /api/auth/check` | GET | Checks if current session is valid. Returns `{"ok": true/false, "username": "...", "role": "..."}`. |
+| `GET /api/users` | GET | Lists all users (admin only). Returns `{"ok": true, "users": [...]}`. |
+| `POST /api/users` | POST | Creates a new user (admin only). Body: `{"username": "...", "password": "...", "role": "...", "bio": "..."}`. |
+| `GET /api/users/{id}` | GET | Gets a single user (admin only). |
+| `PUT /api/users/{id}` | PUT | Updates user role and bio (admin only). Body: `{"role": "...", "bio": "..."}`. |
+| `DELETE /api/users/{id}` | DELETE | Deletes a user (admin only). Cannot delete yourself. |
+| `PUT /api/users/{id}/password` | PUT | Changes a user's password (admin only). Body: `{"password": "..."}`. |
 
 ### WebSocket
 
@@ -189,6 +199,7 @@ CLI flags take precedence over environment variables, which take precedence over
 | `-reconnect-interval` | `JS8WEB_RECONNECT_SEC` | `5` | Seconds between reconnection attempts |
 | `-db` | `JS8WEB_DB_PATH` | `./js8web.db` | SQLite database file path |
 | `-port` | `JS8WEB_PORT` | `8080` | HTTP server listen port |
+| `-log-level` | `JS8WEB_LOG_LEVEL` | `info` | Log level: debug, info, warn, error |
 
 Run `./js8web -help` to see all options.
 
@@ -229,6 +240,7 @@ The webapp is embedded in the binary — no separate deployment needed.
 - Raw packet toggle in settings
 - Embedded static files (single binary deployment)
 - **Configuration via CLI flags and environment variables** (`-port`, `-db`, `-js8call-addr`, `-reconnect-interval`)
+- **Configurable log level** via `-log-level` flag / `JS8WEB_LOG_LEVEL` environment variable (debug/info/warn/error)
 - **Graceful shutdown** via SIGINT/SIGTERM signals
 - **Thread-safe WebSocket session management** with `sync.RWMutex`
 - **Non-blocking WebSocket broadcast** (slow clients don't block others)
@@ -239,20 +251,19 @@ The webapp is embedded in the binary — no separate deployment needed.
 - **Login page** — dedicated login form shown to unauthenticated users
 - **Toast notifications** — success/error feedback for user actions (message sent, login failures, etc.)
 - **User display** — logged-in username shown in status bar with logout button
+- **Role-based access control** — admin, operator, monitor roles enforced via `roleRequired` middleware. Monitors are read-only; operators can send messages; admins have full access including user management.
+- **TX frame historical loading** — transmitted frames appear alongside RX packets when scrolling through message history via combined `/api/chat-messages` endpoint
+- **User management** — admin panel with full CRUD: list users, create accounts, change roles, reset passwords, delete users (admin only)
+- **Mobile-responsive layout** — CSS media queries for proper display on small screens (status bar wrapping, touch targets, scrollable tabs)
 
 ### 🚧 Partially Implemented / Stubbed
 
-- **User roles** — admin, monitor, operator roles exist in the model but role-based access control is not yet enforced (all authenticated users have full access).
-- **RX Spot listing** — `RxSpotListDays()` function body is empty (stub).
+- **RX Spot listing** — `RxSpotListDays()` function body is empty (stub). Spots are stored but not displayed in the UI.
 
 ### ❌ Not Yet Implemented
 
-- Role-based access control (different permissions per role)
 - RX spot display / spot map
-- TX frame historical loading (TX frames appear in real-time but not when scrolling through history)
 - HTTPS / TLS support
-- Mobile-responsive layout refinements
-- Logging level configuration
 - Unit / integration tests
 - CI/CD pipeline
 - Docker container / systemd service file

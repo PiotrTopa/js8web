@@ -81,6 +81,7 @@ On the first run, js8web will:
 | `-reconnect-interval` | Seconds between reconnection attempts | `5` |
 | `-db` | Path to SQLite database file | `./js8web.db` |
 | `-port` | HTTP server port | `8080` |
+| `-log-level` | Log level: debug, info, warn, error | `info` |
 
 All options can also be set via environment variables:
 
@@ -90,6 +91,7 @@ All options can also be set via environment variables:
 | `JS8WEB_RECONNECT_SEC` | Reconnect interval |
 | `JS8WEB_DB_PATH` | Database file path |
 | `JS8WEB_PORT` | HTTP server port |
+| `JS8WEB_LOG_LEVEL` | Log level (debug/info/warn/error) |
 
 CLI flags take precedence over environment variables.
 
@@ -117,9 +119,21 @@ The default account created on first run is:
 - **Username:** `admin`
 - **Password:** `admin`
 
-> ⚠️ **Change the default password** — while js8web does not yet have a password change UI, you should plan to update it once that feature is available.
+> ⚠️ **Change the default password** after first login using the Admin panel (see [User Management](#user-management) below).
 
 After logging in, your session is stored as a browser cookie and will persist for 24 hours. You can log out at any time using the logout button in the status bar.
+
+### User Roles
+
+js8web supports three user roles with different permission levels:
+
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access: view messages, send messages, manage users |
+| **Operator** | View messages and send messages to JS8Call |
+| **Monitor** | View messages only (read-only access) |
+
+The default `admin` user has the Admin role. New users can be created with any role from the Admin panel.
 
 ### Status Bar
 
@@ -192,15 +206,28 @@ When logged in, a message input field appears at the bottom of the chat view:
 
 > **Note:** Messages are sent exactly as typed. JS8Call handles the encoding and transmission. You can address specific stations using JS8Call's message format (e.g., `CALLSIGN MSG ...`).
 
-> **Note:** Sending messages requires authentication. The chat input is only visible when logged in.
+> **Note:** Sending messages requires the **Operator** or **Admin** role. Monitor users see the chat but cannot send messages.
 
 ### Scrolling and History
 
-- Messages are loaded in pages of up to 100 items
+- Messages are loaded in pages of up to 100 items (including both received packets and transmitted frames)
 - **Scroll up** to load older messages automatically
 - **Scroll down** to load newer messages
 - When at the bottom of the list, new messages appear in real time
 - At the top of the history, "(No more messages)" is displayed
+- **TX frames** are now shown in historical scrolling alongside RX packets, sorted by timestamp
+
+### User Management
+
+Administrators can manage user accounts from the **Admin** tab (shield icon) in the tab bar. This tab is only visible to users with the Admin role.
+
+From the Admin panel you can:
+
+- **View all users** — see username, role, and bio for all accounts
+- **Create new users** — click "New User" to add an account with a username, password, role, and optional bio
+- **Change roles** — use the dropdown next to any user to change their role (admin/operator/monitor)
+- **Reset passwords** — click the key icon to set a new password for any user
+- **Delete users** — click the trash icon to remove an account (you cannot delete your own account)
 
 ---
 
@@ -284,7 +311,5 @@ All received packets, spots, and transmitted frames are stored in a SQLite datab
 ## Limitations (Current Version)
 
 - **No HTTPS** — all traffic is unencrypted; use a reverse proxy for TLS
-- **No password change UI** — passwords can only be changed directly in the database
-- **No role-based access** — all authenticated users have full access regardless of role
-- **TX frame history** — transmitted frames appear in real-time but are not shown when scrolling through historical messages
 - **In-memory sessions** — sessions do not survive server restarts
+- **RX spots** — spot reports are stored but not yet displayed in the UI

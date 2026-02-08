@@ -1,4 +1,5 @@
 import Chat from './chat.mjs'
+import AdminUsers from './admin-users.mjs'
 
 function uidGenerator() {
     var S4 = function () {
@@ -10,6 +11,7 @@ function uidGenerator() {
 export default {
     components: {
         Chat,
+        AdminUsers,
     },
     emits: ['toast'],
     data() {
@@ -74,6 +76,9 @@ export default {
         <li class="nav-item" :class="{active: activeTab == 'settings'}">
             <a class="nav-link" :class="{active: activeTab == 'settings'}" @click="activateTab('settings')" href="#"><i class="bi bi-gear"></i></a>
         </li>
+        <li class="nav-item" v-if="$root.authUser?.role === 'admin'" :class="{active: activeTab == 'admin'}">
+            <a class="nav-link" :class="{active: activeTab == 'admin'}" @click="activateTab('admin')" href="#"><i class="bi bi-shield-lock"></i> Admin</a>
+        </li>
     </ul>
     <template v-for="chat in chats">
         <Chat v-show="activeTab == chat.id" :filter="chat.filter" :showRawPackets="this.settingsShowRawPackets" @callsignSelected="this.callsignSelected" @frequencySelected="this.frequencySelected" @toast="e => $emit('toast', e)" />
@@ -88,5 +93,6 @@ export default {
             </div>
         </div>
     </div>
+    <AdminUsers v-if="$root.authUser?.role === 'admin'" v-show="activeTab == 'admin'" @toast="e => $emit('toast', e)" />
     `
 }

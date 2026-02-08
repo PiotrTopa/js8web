@@ -456,3 +456,112 @@
     border-color: #e74c3c;
     color: #fff;
 }
+
+/* ============ Admin Panel ============ */
+
+.admin-panel {
+    overflow-y: auto;
+    height: 100%;
+}
+
+.admin-panel h5 {
+    color: #2c3e50;
+}
+
+.admin-panel .table {
+    font-size: 0.9em;
+}
+
+.admin-panel .table th {
+    border-top: none;
+    color: #95a5a6;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8em;
+}
+
+/* ============ Mobile Responsive ============ */
+
+@media (max-width: 768px) {
+    .status-bar {
+        flex-wrap: wrap;
+        gap: 0.2em 0.8em;
+        padding: 0.3em 0.6em;
+        font-size: 0.8em;
+    }
+
+    .status-bar .status-section {
+        flex-shrink: 0;
+    }
+
+    .status-bar .status-section.ms-auto {
+        margin-left: 0 !important;
+        width: 100%;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 0.2em;
+        margin-top: 0.1em;
+    }
+
+    .chat .chat-history {
+        padding: 10px;
+    }
+
+    .chat .chat-history ul li {
+        margin-bottom: 1em;
+    }
+
+    .chat .chat-history .message .header .time {
+        font-size: 0.65em;
+    }
+
+    .chat .chat-history .message .header .gauges .gauge {
+        font-size: 0.65em;
+    }
+
+    .chat .chat-history .message .content {
+        font-size: 0.9em;
+    }
+
+    .chat-input .input-group {
+        flex-wrap: nowrap;
+    }
+
+    .chat-input .form-control {
+        font-size: 0.9em;
+    }
+
+    .chat-input .btn {
+        white-space: nowrap;
+        font-size: 0.85em;
+    }
+
+    .login-card {
+        max-width: 95vw;
+        margin: 0 0.5em;
+    }
+
+    .nav-tabs {
+        font-size: 0.85em;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-tabs .nav-item {
+        flex-shrink: 0;
+    }
+
+    .admin-panel .table {
+        font-size: 0.8em;
+    }
+
+    .admin-panel .card-body .row {
+        gap: 0.5em 0;
+    }
+
+    .toast-container {
+        max-width: 90vw;
+        right: 5vw;
+    }
+}

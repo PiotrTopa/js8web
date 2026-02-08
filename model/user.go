@@ -66,3 +66,69 @@ func FetchUserByName(db *sql.DB, name string) (*User, error) {
 	}
 	return user, nil
 }
+
+func FetchUserById(db *sql.DB, id int64) (*User, error) {
+	row := db.QueryRow("SELECT `ID`, `NAME`, `PASSWORD`, `ROLE`, `BIO` FROM `USERS` WHERE `ID` = ?", id)
+	user := &User{}
+	err := row.Scan(&user.Id, &user.Name, &user.Password, &user.Role, &user.Bio)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// UserPublic is a safe representation of a user without the password hash.
+type UserPublic struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+	Bio  string `json:"bio"`
+}
+
+func (u *User) Public() UserPublic {
+	return UserPublic{
+		Id:   u.Id,
+		Name: u.Name,
+		Role: u.Role,
+		Bio:  u.Bio,
+	}
+}
+
+func FetchAllUsers(db *sql.DB) ([]UserPublic, error) {
+	rows, err := db.Query("SELECT `ID`, `NAME`, `ROLE`, `BIO` FROM `USERS` ORDER BY `ID`")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := make([]UserPublic, 0)
+	for rows.Next() {
+		var u UserPublic
+		err := rows.Scan(&u.Id, &u.Name, &u.Role, &u.Bio)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+func UpdateUser(db *sql.DB, id int64, role string, bio string) error {
+	_, err := db.Exec("UPDATE `USERS` SET `ROLE` = ?, `BIO` = ? WHERE `ID` = ?", role, bio, id)
+	return err
+}
+
+func UpdateUserPassword(db *sql.DB, id int64, password string) error {
+	hash := calcHash(password)
+	_, err := db.Exec("UPDATE `USERS` SET `PASSWORD` = ? WHERE `ID` = ?", hash, id)
+	return err
+}
+
+func DeleteUser(db *sql.DB, id int64) error {
+	_, err := db.Exec("DELETE FROM `USERS` WHERE `ID` = ?", id)
+	return err
+}
+
+func IsValidRole(role string) bool {
+	return role == ROLE_ADMIN || role == ROLE_MONITOR || role == ROLE_OPERATOR
+}
