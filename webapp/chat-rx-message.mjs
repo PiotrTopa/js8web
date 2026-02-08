@@ -1,7 +1,7 @@
 import ChatRxHeaderIcons from './chat-rx-header-icons.mjs'
 
 export default {
-    props: ['message'],
+    props: ['message', 'isDirectedToMe'],
     emits: ['callsignSelected', 'frequencySelected'],
     components: {
         ChatRxHeaderIcons
@@ -17,7 +17,7 @@ export default {
         }
     },
     template: `
-        <li class="clearfix message my-message">
+        <li class="clearfix message" :class="isDirectedToMe ? 'directed-to-me' : 'my-message'">
             <div class="header">
                 <span class="time">{{ new Date(message.Timestamp).toLocaleString() }}</span>
                 <ChatRxHeaderIcons :message=message @frequencySelected="e => $emit('frequencySelected', e)" />
@@ -25,6 +25,7 @@ export default {
 
                 <span class="from">{{ message.From }}</span>
                 <a class="btn btn-light btn-sm" @click="$emit('callsignSelected', message.From)"><i class="bi bi-search"></i></a>
+                <span class="to" v-if="message.To"> → {{ message.To }}</span>
                 <span class="grid" v-if=message.Grid><i class="bi bi-globe"></i>{{ message.Grid }}</span>
             </div>
             <div class="content">{{ getMessageText(message) }}</div>

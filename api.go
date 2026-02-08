@@ -24,6 +24,7 @@ func apiStationInfoGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		http.Error(w, "cannot marshal json", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(stationInfoJson)
 }
 
@@ -38,6 +39,7 @@ func apiRigStatusGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		http.Error(w, "cannot marshal json", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(rigStatusJson)
 }
 
@@ -99,5 +101,6 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 )
@@ -109,7 +108,7 @@ func (obj *RxPacketObj) Insert(db *sql.DB) error {
 		&obj.Extra,
 	)
 	if err != nil {
-		return fmt.Errorf("error executing SQL query inserting new RxPacket record, becouse of %w", err)
+		return fmt.Errorf("error executing SQL query inserting new RxPacket record, caused by %w", err)
 	}
 
 	obj.Id, _ = res.LastInsertId()
@@ -160,7 +159,7 @@ func fetchRxPackets(db *sql.DB, query string, args ...any) ([]RxPacketObj, error
 
 	rows, err := stmt.Query(args...)
 	if err != nil {
-		log.Fatal(err)
+		return l, fmt.Errorf("error executing SQL query, caused by %w", err)
 	}
 	defer rows.Close()
 

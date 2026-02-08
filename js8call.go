@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"net"
 	"time"
 
@@ -45,8 +44,18 @@ func writeEventsToJs8call(events <-chan model.Js8callEvent, disconnected chan<- 
 			)
 			continue
 		}
-		writer.WriteString(string(jsonData) + "\n")
-		fmt.Print("Sending: ", string(jsonData)+"\n")
+		logger.Sugar().Infow("Sending to JS8Call", "data", string(jsonData))
+		_, err = writer.WriteString(string(jsonData) + "\n")
+		if err != nil {
+			logger.Sugar().Warnw("Cannot write to JS8Call", "error", err)
+			disconnected <- 1
+			return
+		}
+		if err = writer.Flush(); err != nil {
+			logger.Sugar().Warnw("Cannot flush to JS8Call", "error", err)
+			disconnected <- 1
+			return
+		}
 	}
 }
 

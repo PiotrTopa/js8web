@@ -71,14 +71,7 @@ func (obj *StationInfoObj) Insert(db *sql.DB) error {
 		&obj.Status,
 	)
 	if err != nil {
-		return fmt.Errorf("error executing SQL, becouse of %w", err)
-	}
-
-	obj.Id, _ = res.LastInsertId()
-	return nil
-}
-
-func (obj *StationInfoObj) updateLatest(db *sql.DB) error {
+		return fmt.Errorf("error executing SQL Insert, caused by %w", err)(db *sql.DB) error {
 	if obj.Id == 0 {
 		return errors.New("cannot update latest flag without ID set")
 	}
@@ -91,13 +84,7 @@ func (obj *StationInfoObj) updateLatest(db *sql.DB) error {
 
 	_, err = stmt.Exec(&obj.Id)
 	if err != nil {
-		return fmt.Errorf("error executing SQL, becouse of %w", err)
-	}
-
-	return nil
-}
-
-func (obj *StationInfoObj) Save(db *sql.DB) error {
+		return fmt.Errorf("error executing SQL updateLatest, caused by %w", err)(db *sql.DB) error {
 	err := obj.Insert(db)
 	if err != nil {
 		return err
@@ -118,7 +105,6 @@ func (obj *StationInfoObj) Scan(rows *sql.Row) error {
 		&obj.Status,
 	)
 	return err
-	//obj.Timestamp=pa
 }
 
 func FetchLatestStationInfo(db *sql.DB) (StationInfoObj, error) {
@@ -126,7 +112,7 @@ func FetchLatestStationInfo(db *sql.DB) (StationInfoObj, error) {
 	obj := StationInfoObj{}
 	err := obj.Scan(row)
 	if err != nil {
-		return obj, fmt.Errorf("error fetching SQL query row, becouse of %w", err)
+		return obj, fmt.Errorf("error fetching latest StationInfo, caused by %w", err)
 	}
 	return obj, nil
 }

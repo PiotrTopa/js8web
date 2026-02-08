@@ -64,7 +64,7 @@ func (obj *RxSpotObj) Insert(db *sql.DB) error {
 		&obj.Offset,
 	)
 	if err != nil {
-		return fmt.Errorf("error inserting new RxSpot record, becouse of %w", err)
+		return fmt.Errorf("error inserting new RxSpot record, caused by %w", err)
 	}
 
 	obj.Id, _ = res.LastInsertId()

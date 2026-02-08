@@ -73,7 +73,7 @@ func (obj *TxFrameObj) Insert(db *sql.DB) error {
 		string(marshalledTones),
 	)
 	if err != nil {
-		return fmt.Errorf("error executing SQL query inserting new TxFrame record, becouse of %w", err)
+		return fmt.Errorf("error executing SQL query inserting new TxFrame record, caused by %w", err)
 	}
 
 	obj.Id, _ = res.LastInsertId()

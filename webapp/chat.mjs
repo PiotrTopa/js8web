@@ -19,6 +19,9 @@ export default {
 
         this.$nextTick(_ => window.addEventListener('event', this.event))
     },
+    unmounted() {
+        window.removeEventListener('event', this.event)
+    },
     data() {
         return {
             messages: [],
@@ -47,11 +50,7 @@ export default {
                     direction: direction,
                     filter: this.filter,
                 }
-            }).then(response => {
-                return new Promise((resolve, reject) => {
-                    resolve(response.data)
-                })
-            })
+            }).then(response => response.data)
         },
         fetchNewestMessages() {
             return this.fetchMessages(new Date(Date.now()).toISOString())
@@ -113,14 +112,13 @@ export default {
             }
 
             if (this.atBottom) {
-                this.messages.unshift()
                 this.messages.push(message)
-                this.scrollToBottom()
+                this.$nextTick(_ => this.scrollToBottom())
             }
         },
         event(evt) {
             const event = evt.detail;
-            if (event.EventType == "object" && event.WsType == "RX.PACKET") {
+            if (event.EventType == "object" && (event.WsType == "RX.PACKET" || event.WsType == "TX.FRAME")) {
                 this.newMessage(event.Event)
             }
         }

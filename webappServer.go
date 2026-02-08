@@ -15,7 +15,7 @@ var WEBAPP_SUBDIR = "webapp"
 func startWebappServer(db *sql.DB, wsEventsSessionContainer *websocketSessionContainer) {
 	serverRoot, err := fs.Sub(WEBAPP_FS, WEBAPP_SUBDIR)
 	if err != nil {
-		logger.Sugar().Fatalf(
+		logger.Sugar().Fatalw(
 			"Cannot access WebApp subdirectory",
 			"subdir", WEBAPP_SUBDIR,
 			"error", err,
@@ -39,7 +39,7 @@ func startWebappServer(db *sql.DB, wsEventsSessionContainer *websocketSessionCon
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", WEBAPP_PORT), mux)
 	if err != nil {
-		logger.Sugar().Fatalf(
+		logger.Sugar().Fatalw(
 			"Cannot start WebApp HTTP server",
 			"port", WEBAPP_PORT,
 			"error", err,
@@ -53,8 +53,8 @@ type methodRouter struct {
 }
 
 func methodNotSupported(w http.ResponseWriter, req *http.Request, db *sql.DB) {
-	logger.Sugar().Errorf(
-		"method is not supported by the API",
+	logger.Sugar().Errorw(
+		"Method is not supported by the API",
 		"method", req.Method,
 		"url", req.URL,
 	)

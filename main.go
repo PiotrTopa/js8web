@@ -2,7 +2,10 @@ package main
 
 import (
 	"database/sql"
-	"time"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/PiotrTopa/js8web/model"
 	"go.uber.org/zap"
@@ -16,10 +19,16 @@ func main() {
 	logger, _ = zap.NewDevelopment()
 	defer logger.Sync()
 
+	initConfig()
+
+	logger.Sugar().Infow("js8web starting",
+		"js8callAddr", JS8CALL_TCP_CONNECTION_STRING,
+		"port", WEBAPP_PORT,
+		"db", DB_FILE_PATH,
+	)
+
 	incomingEvents := make(chan model.Js8callEvent, 1)
 	outgoingEvents := make(chan model.Js8callEvent, 1)
-	defer close(incomingEvents)
-	defer close(outgoingEvents)
 
 	db := initDbConnection()
 	defer db.Close()
@@ -30,7 +39,6 @@ func main() {
 	outgoingWebsocketEvents, newObjects := dispatchStateChangeEvents(incomingEvents)
 
 	websocketMessages := make(chan model.WebsocketMessage, 1)
-	defer close(websocketMessages)
 	go mainDispatcher(db, websocketMessages, outgoingWebsocketEvents, newObjects)
 
 	wsSessionContainer := new(websocketSessionContainer)
@@ -39,10 +47,15 @@ func main() {
 
 	go startWebappServer(db, wsSessionContainer)
 
-	for {
-		time.Sleep(time.Second)
-	}
+	logger.Sugar().Infof("js8web ready — http://localhost:%d", WEBAPP_PORT)
 
+	// Wait for termination signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-quit
+
+	fmt.Println() // newline after ^C
+	logger.Sugar().Infow("Shutting down", "signal", sig.String())
 }
 
 func mainDispatcher(db *sql.DB, websocketMessages chan<- model.WebsocketMessage, outgoingWebsocketEvents <-chan model.WebsocketEvent, newObjects <-chan model.DbObj) {
@@ -65,13 +78,11 @@ func mainDispatcher(db *sql.DB, websocketMessages chan<- model.WebsocketMessage,
 		}
 	}()
 
-	go func() {
-		for event := range outgoingWebsocketEvents {
-			websocketMessages <- model.WebsocketMessage{
-				EventType: "event",
-				WsType:    event.WsType(),
-				Event:     event,
-			}
+	for event := range outgoingWebsocketEvents {
+		websocketMessages <- model.WebsocketMessage{
+			EventType: "event",
+			WsType:    event.WsType(),
+			Event:     event,
 		}
-	}()
+	}
 }

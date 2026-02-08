@@ -8,7 +8,6 @@ function uidGenerator() {
 }
 
 export default {
-    props: ['message'],
     components: {
         Chat,
     },
@@ -21,11 +20,6 @@ export default {
                     label: 'All messages',
                     filter: {},
                 },
-                {
-                    id: 'test',
-                    label: 'Test tab',
-                    filter: { callsign: '161rx02' },
-                }
             ],
             uid: uidGenerator(),
             settingsShowRawPackets: true,

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-
 	"github.com/PiotrTopa/js8web/model"
 )
 
@@ -69,5 +67,6 @@ func dispatchStateChangeEvents(events <-chan model.Js8callEvent) (<-chan model.W
 }
 
 func defaultNotifier(event *model.Js8callEvent, websocketEvents chan<- model.WebsocketEvent, databaseObjects chan<- model.DbObj) error {
-	return errors.New("unrecognized event type")
+	logger.Sugar().Debugw("Unhandled event type", "type", event.Type)
+	return nil
 }
