@@ -42,6 +42,99 @@ This produces a single `js8web` executable with the web interface embedded insid
 
 If pre-built binaries are available from the releases page, download the one for your operating system and architecture. No installation is needed — just place it somewhere convenient.
 
+### Running with Docker
+
+js8web is available as a Docker container — no Go toolchain or build step required.
+
+#### 1. Build the image
+
+```bash
+git clone https://github.com/PiotrTopa/js8web.git
+cd js8web
+docker build -t js8web .
+```
+
+#### 2. Run the container
+
+```bash
+docker run -d \
+  --name js8web \
+  -p 8080:8080 \
+  -v js8web-data:/data \
+  js8web \
+  -js8call-addr <JS8CALL_HOST>:2442
+```
+
+Replace `<JS8CALL_HOST>` with the IP address or hostname of the machine running JS8Call. If JS8Call runs on the same host as Docker, use the host's LAN IP (not `localhost`, since the container has its own network).
+
+> **Tip:** On Linux you can use `--network host` instead of `-p 8080:8080` to share the host's network stack directly. In that case `localhost` will reach JS8Call:
+> ```bash
+> docker run -d --name js8web --network host -v js8web-data:/data js8web
+> ```
+
+#### 3. Open the web interface
+
+Navigate to `http://localhost:8080` (or `http://<host-ip>:8080` from another device).
+
+The default login is **admin** / **admin** — change the password immediately via the Admin panel.
+
+#### Configuration
+
+All command-line flags work as usual — append them after the image name:
+
+```bash
+docker run -d \
+  --name js8web \
+  -p 9090:9090 \
+  -v js8web-data:/data \
+  js8web \
+  -js8call-addr 192.168.1.50:2442 \
+  -port 9090 \
+  -log-level debug
+```
+
+Alternatively, use environment variables:
+
+```bash
+docker run -d \
+  --name js8web \
+  -p 8080:8080 \
+  -v js8web-data:/data \
+  -e JS8WEB_JS8CALL_ADDR=192.168.1.50:2442 \
+  -e JS8WEB_LOG_LEVEL=debug \
+  js8web
+```
+
+#### Data persistence
+
+The database is stored in the `/data` volume inside the container. The `-v js8web-data:/data` flag creates a named Docker volume that persists across container restarts and upgrades.
+
+To back up the database:
+
+```bash
+docker cp js8web:/data/js8web.db ./js8web-backup.db
+```
+
+#### Stopping and restarting
+
+```bash
+docker stop js8web      # stop
+docker start js8web     # start again
+docker rm -f js8web     # remove container (data volume is preserved)
+```
+
+#### Upgrading
+
+```bash
+cd js8web
+git pull
+docker build -t js8web .
+docker rm -f js8web
+docker run -d --name js8web -p 8080:8080 -v js8web-data:/data js8web -js8call-addr <JS8CALL_HOST>:2442
+```
+
+Your database and user accounts are preserved in the `js8web-data` volume.
+
 ---
 
 ## JS8Call Configuration

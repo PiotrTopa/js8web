@@ -86,6 +86,8 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | `auth.go` | Authentication system: cookie-based session management, login/logout/check API handlers, `authRequired` and `roleRequired` middleware. Sessions are stored in-memory with 24-hour expiry. |
 | `userApi.go` | User management API: list, create, update, delete users, change passwords. Admin-only endpoints. |
 | `websocket.go` | WebSocket upgrade handler and session management. Each connected browser gets a session; all sessions receive broadcast messages. |
+| `Dockerfile` | Multi-stage Docker build: Go 1.18 builder compiles the binary, then copies it into a minimal `debian:bullseye-slim` runtime image. Exposes port 8080, uses `/data` volume for the database. |
+| `.dockerignore` | Excludes build artifacts, database files, docs, and IDE files from Docker build context. |
 
 ### Model Package (`model/`)
 
@@ -255,6 +257,7 @@ The webapp is embedded in the binary — no separate deployment needed.
 - **TX frame historical loading** — transmitted frames appear alongside RX packets when scrolling through message history via combined `/api/chat-messages` endpoint
 - **User management** — admin panel with full CRUD: list users, create accounts, change roles, reset passwords, delete users (admin only)
 - **Mobile-responsive layout** — CSS media queries for proper display on small screens (status bar wrapping, touch targets, scrollable tabs)
+- **Docker container** — multi-stage Dockerfile for easy deployment; `/data` volume for persistent database
 
 ### 🚧 Partially Implemented / Stubbed
 
@@ -266,7 +269,7 @@ The webapp is embedded in the binary — no separate deployment needed.
 - HTTPS / TLS support
 - Unit / integration tests
 - CI/CD pipeline
-- Docker container / systemd service file
+- systemd service file
 
 ---
 

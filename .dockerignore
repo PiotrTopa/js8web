@@ -1,0 +1,20 @@
+# Build artifacts
+js8web
+*.db
+
+# IDE / OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Docs (not needed in image)
+*.md
+LICENSE
+notesfortest
