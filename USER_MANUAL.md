@@ -109,6 +109,18 @@ http://<your-ip-address>:8080
 
 ## Using the Web Interface
 
+### Login
+
+When you first open js8web in your browser, you will see a login page. Enter your credentials to access the dashboard.
+
+The default account created on first run is:
+- **Username:** `admin`
+- **Password:** `admin`
+
+> ⚠️ **Change the default password** — while js8web does not yet have a password change UI, you should plan to update it once that feature is available.
+
+After logging in, your session is stored as a browser cookie and will persist for 24 hours. You can log out at any time using the logout button in the status bar.
+
 ### Status Bar
 
 The top of the page shows a dark status bar with:
@@ -121,6 +133,7 @@ The top of the page shows a dark status bar with:
 - **Speed** — JS8Call speed mode (color-coded)
 - **Selected** — currently selected callsign in JS8Call
 - **Info** — station info text
+- **User** — your logged-in username and a logout button (right side)
 
 The status bar updates in real time as JS8Call reports changes.
 
@@ -166,6 +179,20 @@ The interface supports a tabbed view for monitoring specific conversations:
 Click the ⚙ gear icon in the tab bar to access settings:
 
 - **Show raw packets** — toggle display of `RX.ACTIVITY` raw decoded packets alongside directed messages
+
+### Sending Messages
+
+When logged in, a message input field appears at the bottom of the chat view:
+
+1. Type your message in the input field
+2. Press **Enter** or click the **Send** button
+3. The message is sent to JS8Call's `TX.SEND_MESSAGE` API, which queues it for transmission
+4. A toast notification confirms the message was queued
+5. Once transmitted, the TX frame will appear in the chat in real-time
+
+> **Note:** Messages are sent exactly as typed. JS8Call handles the encoding and transmission. You can address specific stations using JS8Call's message format (e.g., `CALLSIGN MSG ...`).
+
+> **Note:** Sending messages requires authentication. The chat input is only visible when logged in.
 
 ### Scrolling and History
 
@@ -242,18 +269,22 @@ All received packets, spots, and transmitted frames are stored in a SQLite datab
 
 ## Security Considerations
 
-> ⚠️ **js8web does not currently implement authentication or encryption.**
+> ⚠️ **js8web does not currently support HTTPS/TLS encryption.**
 
-- The web interface is accessible to anyone who can reach the server on the network
-- Do not expose js8web directly to the internet without additional protection (reverse proxy with authentication, VPN, firewall rules)
-- The default admin password is `admin` — this will matter once authentication is implemented
+- js8web requires login to send messages — unauthenticated users cannot access the dashboard
+- The default admin password is `admin` — **change it as soon as possible**
+- Sessions are stored in server memory (not persisted) — a server restart will log out all users
+- Session cookies are `HttpOnly` and `SameSite=Strict` to mitigate XSS and CSRF
+- Do not expose js8web directly to the internet without additional protection (reverse proxy with TLS, VPN, firewall rules)
 - Consider binding to `localhost` only if remote access is not needed
+- All traffic including login credentials is unencrypted without HTTPS
 
 ---
 
 ## Limitations (Current Version)
 
-- **Read-only** — you cannot send messages or commands to JS8Call from the web interface yet
-- **No authentication** — anyone with network access can view the dashboard
-- **No HTTPS** — all traffic is unencrypted
+- **No HTTPS** — all traffic is unencrypted; use a reverse proxy for TLS
+- **No password change UI** — passwords can only be changed directly in the database
+- **No role-based access** — all authenticated users have full access regardless of role
 - **TX frame history** — transmitted frames appear in real-time but are not shown when scrolling through historical messages
+- **In-memory sessions** — sessions do not survive server restarts

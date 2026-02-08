@@ -56,3 +56,13 @@ func (obj *User) Insert(db *sql.DB) error {
 	obj.Id, _ = res.LastInsertId()
 	return nil
 }
+
+func FetchUserByName(db *sql.DB, name string) (*User, error) {
+	row := db.QueryRow("SELECT `ID`, `NAME`, `PASSWORD`, `ROLE`, `BIO` FROM `USERS` WHERE `NAME` = ?", name)
+	user := &User{}
+	err := row.Scan(&user.Id, &user.Name, &user.Password, &user.Role, &user.Bio)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

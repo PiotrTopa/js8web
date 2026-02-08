@@ -6,13 +6,15 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+
+	"github.com/PiotrTopa/js8web/model"
 )
 
 //go:embed webapp/*
 var WEBAPP_FS embed.FS
 var WEBAPP_SUBDIR = "webapp"
 
-func startWebappServer(db *sql.DB, wsEventsSessionContainer *websocketSessionContainer) {
+func startWebappServer(db *sql.DB, wsEventsSessionContainer *websocketSessionContainer, outgoingEvents chan<- model.Js8callEvent) {
 	serverRoot, err := fs.Sub(WEBAPP_FS, WEBAPP_SUBDIR)
 	if err != nil {
 		logger.Sugar().Fatalw(
@@ -33,6 +35,18 @@ func startWebappServer(db *sql.DB, wsEventsSessionContainer *websocketSessionCon
 	}, db))
 	mux.HandleFunc("/api/rig-status", methodHandler(methodRouter{
 		get: apiRigStatusGet,
+	}, db))
+	mux.HandleFunc("/api/tx-message", authRequired(methodHandler(methodRouter{
+		post: apiTxMessagePost(outgoingEvents),
+	}, db)))
+	mux.HandleFunc("/api/auth/login", methodHandler(methodRouter{
+		post: apiAuthLoginPost,
+	}, db))
+	mux.HandleFunc("/api/auth/logout", methodHandler(methodRouter{
+		post: apiAuthLogoutPost,
+	}, db))
+	mux.HandleFunc("/api/auth/check", methodHandler(methodRouter{
+		get: apiAuthCheckGet,
 	}, db))
 	mux.HandleFunc("/ws/events", websocketHandler(wsEventsSessionContainer))
 	mux.Handle("/", webappFs)

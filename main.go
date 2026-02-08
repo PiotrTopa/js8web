@@ -45,7 +45,7 @@ func main() {
 	wsSessionContainer.init()
 	go wsSessionContainer.process(websocketMessages)
 
-	go startWebappServer(db, wsSessionContainer)
+	go startWebappServer(db, wsSessionContainer, outgoingEvents)
 
 	logger.Sugar().Infof("js8web ready — http://localhost:%d", WEBAPP_PORT)
 

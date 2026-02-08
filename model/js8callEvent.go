@@ -14,6 +14,9 @@ var (
 	EVENT_TYPE_STATION_CALLSIGN = "STATION.CALLSIGN"
 	EVENT_TYPE_STATION_GRID     = "STATION.GRID"
 
+	// outgoing event types (sent to JS8Call)
+	EVENT_TYPE_TX_SEND_MESSAGE = "TX.SEND_MESSAGE"
+
 	// event types as seen in Websocket communication
 	WS_EVENT_TYPE_RIG_PTT      = "RIG.PTT"
 	WS_EVENT_TYPE_RIG_STATUS   = "RIG.STATUS"

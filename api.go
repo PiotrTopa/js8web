@@ -9,6 +9,15 @@ import (
 	"github.com/PiotrTopa/js8web/model"
 )
 
+type txMessageRequest struct {
+	Text string `json:"text"`
+}
+
+type txMessageResponse struct {
+	Ok    bool   `json:"ok"`
+	Error string `json:"error,omitempty"`
+}
+
 func parseTimestamp(t string) (time.Time, error) {
 	return time.Parse(time.RFC3339, t)
 }
@@ -103,4 +112,45 @@ func apiRxPacketsGet(w http.ResponseWriter, req *http.Request, db *sql.DB) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
+}
+
+// apiTxMessagePost returns a handler that sends a text message to JS8Call via the outgoing events channel.
+func apiTxMessagePost(outgoingEvents chan<- model.Js8callEvent) func(http.ResponseWriter, *http.Request, *sql.DB) {
+	return func(w http.ResponseWriter, req *http.Request, db *sql.DB) {
+		var body txMessageRequest
+		if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(txMessageResponse{Ok: false, Error: "invalid request body"})
+			return
+		}
+
+		text := body.Text
+		if len(text) == 0 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(txMessageResponse{Ok: false, Error: "text is required"})
+			return
+		}
+
+		event := model.Js8callEvent{
+			Type:  model.EVENT_TYPE_TX_SEND_MESSAGE,
+			Value: text,
+		}
+
+		// Non-blocking send — if the channel is full, report an error
+		select {
+		case outgoingEvents <- event:
+			logger.Sugar().Infow("TX message queued", "text", text)
+		default:
+			logger.Sugar().Warnw("TX message channel full, message dropped", "text", text)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(txMessageResponse{Ok: false, Error: "outgoing message queue is full"})
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(txMessageResponse{Ok: true})
+	}
 }

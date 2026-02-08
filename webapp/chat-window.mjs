@@ -11,6 +11,7 @@ export default {
     components: {
         Chat,
     },
+    emits: ['toast'],
     data() {
         return {
             activeTab: 'all',
@@ -75,7 +76,7 @@ export default {
         </li>
     </ul>
     <template v-for="chat in chats">
-        <Chat v-show="activeTab == chat.id" :filter="chat.filter" :showRawPackets="this.settingsShowRawPackets" @callsignSelected="this.callsignSelected" @frequencySelected="this.frequencySelected" />
+        <Chat v-show="activeTab == chat.id" :filter="chat.filter" :showRawPackets="this.settingsShowRawPackets" @callsignSelected="this.callsignSelected" @frequencySelected="this.frequencySelected" @toast="e => $emit('toast', e)" />
     </template>
     <div v-show="activeTab == 'settings'">
         <div class="row">

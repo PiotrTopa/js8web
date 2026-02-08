@@ -337,3 +337,122 @@
     border-radius: 0.5em;
     border-left: 3px solid #e74c3c;
 }
+
+/* ============ Login Page ============ */
+
+.login-overlay {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 380px;
+    border: none;
+    border-radius: 0.75em;
+}
+
+.login-card .card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.login-card .card-title .bi {
+    color: #3498db;
+}
+
+/* ============ Chat Input ============ */
+
+.chat-input {
+    flex: 0 0 auto;
+    padding: 0.5em 0;
+    border-top: 1px solid #dee2e6;
+}
+
+.chat-input .form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.chat-input .btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.chat-input .btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* ============ Toast Notifications ============ */
+
+.toast-container {
+    position: fixed;
+    top: 1em;
+    right: 1em;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    max-width: 400px;
+}
+
+.toast-item {
+    display: flex;
+    align-items: center;
+    padding: 0.6em 1em;
+    border-radius: 0.5em;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    font-size: 0.9em;
+    animation: toast-in 0.3s ease-out;
+}
+
+.toast-item .toast-message {
+    flex: 1;
+    margin-left: 0.5em;
+}
+
+.toast-item .btn-close {
+    font-size: 0.6em;
+    opacity: 0.5;
+}
+
+.toast-success { border-left: 4px solid #2ecc71; }
+.toast-error { border-left: 4px solid #e74c3c; }
+.toast-warning { border-left: 4px solid #f39c12; }
+.toast-info { border-left: 4px solid #3498db; }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.toast-leave-active {
+    transition: all 0.3s ease-in;
+}
+
+.toast-leave-to {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+/* ============ Status Bar User ============ */
+
+.status-user {
+    color: #bdc3c7;
+    font-size: 0.85em;
+}
+
+.status-logout-btn {
+    font-size: 0.75em;
+    padding: 0.1em 0.4em;
+    border-color: #7f8c8d;
+    color: #bdc3c7;
+}
+
+.status-logout-btn:hover {
+    background: #e74c3c;
+    border-color: #e74c3c;
+    color: #fff;
+}

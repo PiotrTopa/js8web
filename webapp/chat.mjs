@@ -4,7 +4,7 @@ const EXPECTED_MESSAGES_COUNT = 100
 
 export default {
     props: ['filter', 'showRawPackets'],
-    emits: ['callsignSelected', 'frequencySelected'],
+    emits: ['callsignSelected', 'frequencySelected', 'toast'],
     components: {
         ChatMessage,
     },
@@ -28,7 +28,9 @@ export default {
             atTop: false,
             atBottom: false,
             loadingBefore: false,
-            loadingAfter: false
+            loadingAfter: false,
+            txText: '',
+            txSending: false,
         }
     },
     methods: {
@@ -121,6 +123,31 @@ export default {
             if (event.EventType == "object" && (event.WsType == "RX.PACKET" || event.WsType == "TX.FRAME")) {
                 this.newMessage(event.Event)
             }
+        },
+        sendMessage() {
+            const text = this.txText.trim()
+            if (!text || this.txSending) return
+
+            this.txSending = true
+            axios.post('/api/tx-message', { text })
+                .then(() => {
+                    this.txText = ''
+                    this.$emit('toast', { type: 'success', message: 'Message queued for transmission' })
+                })
+                .catch(err => {
+                    const msg = err.response?.data?.error || 'Failed to send message'
+                    this.$emit('toast', { type: 'error', message: msg })
+                })
+                .finally(() => {
+                    this.txSending = false
+                    this.$nextTick(() => this.$refs.txInput?.focus())
+                })
+        },
+        handleTxKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                this.sendMessage()
+            }
         }
     },
     template: `
@@ -134,12 +161,12 @@ export default {
             <div class="loader" v-if="loadingAfter">LOADING</div>
             <div class="history-bottom" v-if="atBottom"><i class="bi bi-broadcast"></i> receiving <i class="bi bi-broadcast"></i></div>
         </div>
-        <div class="chat-message clearfix" style="display: none">
-            <div class="input-group mb-0">
-            <div class="input-group-prepend">
-                <span class="input-group-text"><i class="fa fa-send"></i></span>
-            </div>
-            <input type="text" class="form-control" placeholder="Enter text here...">
+        <div class="chat-input" v-if="$root.authenticated">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Type message to send via JS8Call..." v-model="txText" @keydown="handleTxKeydown" ref="txInput" :disabled="txSending">
+                <button class="btn btn-primary" @click="sendMessage" :disabled="!txText.trim() || txSending">
+                    <i class="bi" :class="txSending ? 'bi-hourglass-split' : 'bi-send'"></i> Send
+                </button>
             </div>
         </div>
     </div>`

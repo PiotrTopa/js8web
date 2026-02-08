@@ -81,8 +81,9 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | `stationInfo.go` | Notifier for `STATION.CALLSIGN`, `STATION.GRID`, `STATION.INFO`, `STATION.STATUS` → updates in-memory `stationInfoCache`, emits WS event and persists to DB. Initializes cache from last DB record on startup. |
 | `txActivity.go` | Notifier for `TX.FRAME` → creates `TxFrameObj`, applies current rig status, saves to DB. |
 | `db.go` | SQLite database initialization. Creates file and runs `initDb.sql` if DB does not exist. Creates default admin user. |
-| `webappServer.go` | HTTP server setup. Registers REST API routes, WebSocket endpoint, and static file handler for the embedded webapp. Implements method routing. |
-| `api.go` | REST API handler functions: `GET /api/station-info`, `GET /api/rig-status`, `GET /api/rx-packets`. |
+| `webappServer.go` | HTTP server setup. Registers REST API routes (including auth and TX message endpoints), WebSocket endpoint, and static file handler for the embedded webapp. Implements method routing and auth middleware integration. |
+| `api.go` | REST API handler functions: `GET /api/station-info`, `GET /api/rig-status`, `GET /api/rx-packets`, `POST /api/tx-message` (sends message to JS8Call). |
+| `auth.go` | Authentication system: cookie-based session management, login/logout/check API handlers, `authRequired` middleware. Sessions are stored in-memory with 24-hour expiry. |
 | `websocket.go` | WebSocket upgrade handler and session management. Each connected browser gets a session; all sessions receive broadcast messages. |
 
 ### Model Package (`model/`)
@@ -99,7 +100,7 @@ The goal is to provide a remote, browser-accessible dashboard for monitoring and
 | `rigStatus.go` | `RigStatusWsEvent` — in-memory rig status (dial freq, offset, speed, selected callsign). Not persisted. |
 | `rigPtt.go` | `RigPttWsEvent` — PTT on/off event for WebSocket broadcast. |
 | `stationInfo.go` | `StationInfoObj` / `StationInfoWsEvent` — station callsign, grid, info, status. Persisted with a "latest" flag pattern. |
-| `user.go` | `User` model with SHA-256 password hashing. Default admin/admin user. Roles: admin, monitor, operator. Insert only — no login/auth flow implemented yet. |
+| `user.go` | `User` model with SHA-256 password hashing. Default admin/admin user. Roles: admin, monitor, operator. `FetchUserByName` for login lookup. |
 | `utils.go` | Time conversion helpers: JS8Call millisecond timestamps ↔ `time.Time` ↔ SQLite RFC3339 strings. |
 
 ### Database Schema (`res/initDb.sql`)
@@ -119,10 +120,12 @@ All timestamp-bearing tables have indexes on `TIMESTAMP`.
 | File | Responsibility |
 |------|---------------|
 | `index.html` | Single-page app shell. Loads Bootstrap, Vue 3, axios via CDN. Mounts Vue app. |
-| `app.mjs` | Root Vue component. Fetches initial station info and rig status via REST API. Opens WebSocket with auto-reconnect logic (3s interval). Updates local state for station info, rig status, and PTT from WebSocket events. Dispatches events to child components via browser `CustomEvent`s. |
-| `status-bar.mjs` | Status bar component showing connection state (wi-fi icon), station callsign, grid, dial frequency, offset, speed mode, selected callsign, and station info. |
+| `app.mjs` | Root Vue component. Manages authentication state (login/logout). Fetches initial station info and rig status via REST API. Opens WebSocket with auto-reconnect logic (3s interval). Updates local state for station info, rig status, and PTT from WebSocket events. Dispatches events to child components via browser `CustomEvent`s. |
+| `login-page.mjs` | Login form component. Submits credentials to `POST /api/auth/login`. Emits `login` event on success with username and role. |
+| `toast-container.mjs` | Toast notification system. Displays success/error/warning/info messages with auto-dismiss (3s for success, 6s for errors). |
+| `status-bar.mjs` | Status bar component showing connection state (wi-fi icon), station callsign, grid, dial frequency, offset, speed mode, selected callsign, station info, logged-in user, and logout button. |
 | `chat-window.mjs` | Tab management component. Default "All messages" tab + dynamic filter tabs (by callsign or frequency). Settings tab with "show raw packets" toggle. |
-| `chat.mjs` | Core chat/message list component. Infinite scroll (loads older/newer pages). Listens for `RX.PACKET` WebSocket events and appends new messages in real-time. Applies client-side filtering. |
+| `chat.mjs` | Core chat/message list component. Infinite scroll (loads older/newer pages). Listens for `RX.PACKET` and `TX.FRAME` WebSocket events and appends new messages in real-time. Applies client-side filtering. Includes message input field for sending messages to JS8Call (visible when authenticated). |
 | `chat-message.mjs` | Router component: renders `ChatRxPacket` for raw `RX.ACTIVITY`, `ChatRxMessage` for `RX.DIRECTED`/`RX.DIRECTED.ME` messages, and `ChatTxFrame` for transmitted frames. |
 | `chat-rx-message.mjs` | Renders a directed message with sender callsign, recipient, grid, timestamp, SNR/speed/drift gauges, and message text. Messages directed to own station are visually highlighted. |
 | `chat-rx-packet.mjs` | Renders a raw activity packet with timestamp and gauges. |
@@ -148,7 +151,12 @@ All timestamp-bearing tables have indexes on `TIMESTAMP`.
 
 ### Outgoing (Browser → JS8Call)
 
-The `outgoingEvents` channel exists in `main.go` and is wired through `js8call.go`, but **no outgoing commands are sent yet**. The chat input field exists in the HTML template but is hidden (`display: none`).
+1. **User input** — authenticated user types a message in the chat input field.
+2. **API call** — `POST /api/tx-message` with `{"text": "..."}` body.
+3. **Auth check** — `authRequired` middleware validates the session cookie.
+4. **Queue** — handler creates a `Js8callEvent` with type `TX.SEND_MESSAGE` and sends it to the `outgoingEvents` channel.
+5. **TCP Write** — `js8call.go` writes the JSON event to the JS8Call TCP socket.
+6. **JS8Call** — JS8Call processes the message and queues it for transmission.
 
 ### REST API
 
@@ -157,6 +165,10 @@ The `outgoingEvents` channel exists in `main.go` and is wired through `js8call.g
 | `GET /api/station-info` | GET | Returns current station info (callsign, grid, info, status) from in-memory cache. |
 | `GET /api/rig-status` | GET | Returns current rig status (dial, freq, offset, channel, speed, selected) from in-memory cache. |
 | `GET /api/rx-packets` | GET | Returns up to 100 RX packets. Params: `startTime` (RFC3339), `direction` (`before`/`after`), optional `filter` (JSON with `Callsign` and/or `Freq.From`/`Freq.To`). |
+| `POST /api/tx-message` | POST | Sends a text message to JS8Call. Requires authentication. Body: `{"text": "..."}`. |
+| `POST /api/auth/login` | POST | Authenticates user. Body: `{"username": "...", "password": "..."}`. Returns session cookie. |
+| `POST /api/auth/logout` | POST | Clears session cookie and invalidates server-side session. |
+| `GET /api/auth/check` | GET | Checks if current session is valid. Returns `{"ok": true/false, "username": "...", "role": "..."}`. |
 
 ### WebSocket
 
@@ -222,17 +234,20 @@ The webapp is embedded in the binary — no separate deployment needed.
 - **Non-blocking WebSocket broadcast** (slow clients don't block others)
 - Proper JSON `Content-Type` headers on all API responses
 - Proper `<!DOCTYPE html>` and viewport meta for mobile support
+- **Cookie-based authentication** — login/logout with session cookies, `authRequired` middleware, 24-hour session expiry
+- **Send messages to JS8Call** from the web UI via `POST /api/tx-message` (requires authentication)
+- **Login page** — dedicated login form shown to unauthenticated users
+- **Toast notifications** — success/error feedback for user actions (message sent, login failures, etc.)
+- **User display** — logged-in username shown in status bar with logout button
 
 ### 🚧 Partially Implemented / Stubbed
 
-- **User model** — schema and model exist, default admin user is created, but **no authentication or authorization** is implemented. No login endpoint, no session management, no protected routes.
-- **Outgoing events** — channel infrastructure exists end-to-end, but no UI or API to send commands to JS8Call.
+- **User roles** — admin, monitor, operator roles exist in the model but role-based access control is not yet enforced (all authenticated users have full access).
 - **RX Spot listing** — `RxSpotListDays()` function body is empty (stub).
 
 ### ❌ Not Yet Implemented
 
-- Authentication & authorization (login, sessions, role-based access)
-- Sending messages / commands to JS8Call from the web UI
+- Role-based access control (different permissions per role)
 - RX spot display / spot map
 - TX frame historical loading (TX frames appear in real-time but not when scrolling through history)
 - HTTPS / TLS support

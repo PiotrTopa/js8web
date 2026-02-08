@@ -1,5 +1,7 @@
 import ChatWindow from './chat-window.mjs'
 import StatusBar from './status-bar.mjs'
+import LoginPage from './login-page.mjs'
+import ToastContainer from './toast-container.mjs'
 import axios from 'axios'
 
 const WS_RECONNECT_INTERVAL_MS = 3000
@@ -8,6 +10,8 @@ export default {
     components: {
         ChatWindow,
         StatusBar,
+        LoginPage,
+        ToastContainer,
     },
     data() {
         return {
@@ -17,9 +21,13 @@ export default {
             wsConnected: false,
             ws: null,
             wsReconnectTimer: null,
+            authenticated: false,
+            authUser: null,
+            authChecked: false,
         }
     },
     created() {
+        this.checkAuth()
         this.fetchInitialData()
         this.connectWebSocket()
     },
@@ -32,6 +40,33 @@ export default {
         }
     },
     methods: {
+        checkAuth() {
+            axios.get('/api/auth/check').then(response => {
+                if (response.data.ok) {
+                    this.authenticated = true
+                    this.authUser = { username: response.data.username, role: response.data.role }
+                }
+            }).catch(() => {}).finally(() => {
+                this.authChecked = true
+            })
+        },
+        handleLogin(user) {
+            this.authenticated = true
+            this.authUser = user
+            this.showToast({ type: 'success', message: 'Logged in as ' + user.username })
+        },
+        handleLogout() {
+            axios.post('/api/auth/logout').then(() => {
+                this.authenticated = false
+                this.authUser = null
+                this.showToast({ type: 'info', message: 'Logged out' })
+            }).catch(() => {
+                this.showToast({ type: 'error', message: 'Logout failed' })
+            })
+        },
+        showToast(toast) {
+            this.$refs.toasts?.add(toast)
+        },
         fetchInitialData() {
             axios.get('/api/station-info').then(response => {
                 this.stationInfo = response.data
@@ -98,12 +133,25 @@ export default {
         },
     },
     template: `
-    <div class="d-flex flex-column vh-100">
-        <StatusBar :stationInfo="stationInfo" :rigStatus="rigStatus" :connected="wsConnected" />
-        <div class="ptt-indicator" v-if="pttActive"><i class="bi bi-broadcast"></i> TX</div>
-        <div class="flex-fill d-flex flex-column overflow-hidden p-2">
-            <ChatWindow />
+    <template v-if="!authChecked">
+        <div class="d-flex align-items-center justify-content-center vh-100">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
         </div>
-    </div>
+    </template>
+    <template v-else-if="!authenticated">
+        <LoginPage @login="handleLogin" />
+    </template>
+    <template v-else>
+        <div class="d-flex flex-column vh-100">
+            <StatusBar :stationInfo="stationInfo" :rigStatus="rigStatus" :connected="wsConnected" :authUser="authUser" @logout="handleLogout" />
+            <div class="ptt-indicator" v-if="pttActive"><i class="bi bi-broadcast"></i> TX</div>
+            <div class="flex-fill d-flex flex-column overflow-hidden p-2">
+                <ChatWindow @toast="showToast" />
+            </div>
+        </div>
+    </template>
+    <ToastContainer ref="toasts" />
 `
 }
